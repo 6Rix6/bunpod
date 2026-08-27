@@ -1,5 +1,6 @@
 import 'package:bunpod/bunpod.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:material_wavy_progress_indicator/material_wavy_progress_indicator.dart';
 
@@ -28,8 +29,13 @@ class PlayerPage extends StatefulWidget {
 }
 
 class _PlayerPageState extends State<PlayerPage> {
-  late bool _playing = widget.episode.playing;
   bool _fav = false;
+
+  @override
+  void initState() {
+    super.initState();
+    locator<PlayerCubit>().load(widget.episode);
+  }
 
   void _openChannel() {
     if (widget.fromChannel) {
@@ -44,96 +50,100 @@ class _PlayerPageState extends State<PlayerPage> {
 
   @override
   Widget build(BuildContext context) {
-    final Episode episode = widget.episode;
-    final ColorScheme cs = episode.scheme(context);
-    final TextTheme tt = Theme.of(context).textTheme;
+    return BlocBuilder<PlayerCubit, PlayerState>(
+      bloc: locator<PlayerCubit>(),
+      builder: (context, state) {
+        final Episode episode = widget.episode;
+        final ColorScheme cs = episode.scheme(context);
+        final TextTheme tt = Theme.of(context).textTheme;
 
-    final Duration remaining = episode.total - episode.listened;
-    // Finished episodes have nothing left to count down — show the full
-    // duration again, without the leading minus.
-    final bool ended = remaining <= Duration.zero;
-    final String timeLabel = ended
-        ? episode.total.remainingLabel
-        : '-${remaining.remainingLabel}';
+        // Live countdown once the stream is loaded; falls back to feed data.
+        final Duration remaining = state.remaining;
+        final bool ended = remaining <= Duration.zero;
+        final String timeLabel = ended
+            ? state.total.remainingLabel
+            : '-${remaining.remainingLabel}';
 
-    return Scaffold(
-      backgroundColor: cs.surface,
-      appBar: AppBar(
-        backgroundColor: cs.surface,
-        leading: const StyledBackButton(),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            16.gap,
-            GestureDetector(
-              onTap: _openChannel,
-              behavior: HitTestBehavior.opaque,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    episode.channel.toUpperCase(),
-                    style: tt.labelMedium?.copyWith(
-                      color: cs.onSurfaceVariant,
-                      fontWeight: FontWeight.w700,
+        return Scaffold(
+          backgroundColor: cs.surface,
+          appBar: AppBar(
+            backgroundColor: cs.surface,
+            leading: const StyledBackButton(),
+          ),
+          body: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                16.gap,
+                GestureDetector(
+                  onTap: _openChannel,
+                  behavior: HitTestBehavior.opaque,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        episode.channel.toUpperCase(),
+                        style: tt.labelMedium?.copyWith(
+                          color: cs.onSurfaceVariant,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      4.gap,
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        size: 18,
+                        color: cs.onSurfaceVariant,
+                      ),
+                    ],
+                  ),
+                ),
+                12.gap,
+                Padding(
+                  padding: const EdgeInsets.only(right: 56),
+                  child: Text(
+                    episode.title,
+                    style: tt.displaySmall?.copyWith(
+                      color: cs.primary,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
-                  4.gap,
-                  Icon(
-                    Icons.chevron_right_rounded,
-                    size: 18,
-                    color: cs.onSurfaceVariant,
+                ),
+                const Spacer(),
+                Align(
+                  alignment: Alignment.bottomRight,
+                  child: Text(
+                    timeLabel,
+                    style: GoogleFonts.unbounded(
+                      color: cs.onSurface,
+                      fontSize: 56,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -2,
+                      fontFeatures: const [
+                        FontFeature.tabularFigures(),
+                      ],
+                    ),
                   ),
-                ],
-              ),
-            ),
-            12.gap,
-            Padding(
-              padding: const EdgeInsets.only(right: 56),
-              child: Text(
-                episode.title,
-                style: tt.displaySmall?.copyWith(
-                  color: cs.primary,
-                  fontWeight: FontWeight.w800,
                 ),
-              ),
-            ),
-            const Spacer(),
-            Align(
-              alignment: Alignment.bottomRight,
-              child: Text(
-                timeLabel,
-                style: GoogleFonts.unbounded(
-                  color: cs.onSurface,
-                  fontSize: 56,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: -2,
-                  fontFeatures: const [
-                    FontFeature.tabularFigures(),
-                  ],
+                8.gap,
+                _ProgressBar(
+                  progress: state.progress,
+                  scheme: cs,
                 ),
-              ),
+                24.gap,
+                PlayerControls(
+                  scheme: cs,
+                  playing: state.playing,
+                  fav: _fav,
+                  onPlayPause: () => locator<PlayerCubit>().toggle(),
+                  onFav: () => setState(() => _fav = !_fav),
+                ),
+                const BottomPadding(),
+              ],
             ),
-            8.gap,
-            _ProgressBar(
-              progress: episode.progress,
-              scheme: cs,
-            ),
-            24.gap,
-            PlayerControls(
-              scheme: cs,
-              playing: _playing,
-              fav: _fav,
-              onPlayPause: () => setState(() => _playing = !_playing),
-              onFav: () => setState(() => _fav = !_fav),
-            ),
-            const BottomPadding(),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

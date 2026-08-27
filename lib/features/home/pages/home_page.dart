@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:bunpod/bunpod.dart';
 import 'package:expressive_refresh_indicator/expressive_refresh_indicator.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -11,6 +14,8 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
+  /// The episode the player currently holds; null before anything loads.
+
   late final List<String?> _tabValues = _buildTabValues();
 
   late final TabController _tabController = TabController(
@@ -21,13 +26,27 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   String? _channel;
 
-  late Episode _playing = mockEpisodes.firstWhere(
-    (e) => e.playing,
-    orElse: () => mockEpisodes.first,
-  );
+  void _openPlayer(Episode episode) {
+    Navigator.of(context).push(PlayerPage.route(episode));
+  }
 
-  void _openPlayer() {
-    Navigator.of(context).push(PlayerPage.route(_playing));
+  @override
+  void initState() {
+    super.initState();
+    _tabController.animation!.addListener(_syncChannelToTab);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      logarte.attach(
+        context: context,
+        visible: kDebugMode,
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   // Mock-only: holds the expressive indicator for a beat; a real feed fetch
@@ -45,28 +64,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     return values;
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _tabController.animation!.addListener(_syncChannelToTab);
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      logarte.attach(
-        context: context,
-        visible: kDebugMode,
-      );
-    });
-  }
-
   void _syncChannelToTab() {
     final String? value = _tabValues[_tabController.animation!.value.round()];
     if (value != _channel) setState(() => _channel = value);
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
   }
 
   @override
@@ -113,27 +113,48 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           headerSliverBuilder: (context, innerScrolled) {
             return [
               SliverToBoxAdapter(
-                child: Column(
-                  children: [
-                    24.gap,
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: GestureDetector(
-                        onTap: _openPlayer,
-                        child: HomePlayerCard(
-                          scheme: _playing.scheme(context),
-                          imageUrl: _playing.image,
-                          channel: _playing.channel,
-                          title: _playing.title,
-                          progress: _playing.progress,
-                          timeLeft: _playing.total - _playing.listened,
-                          coverShape: ShapeValues.coverFocused,
-                          onPlayPause: () {},
+                child: BlocBuilder<PlayerCubit, PlayerState>(
+                  builder: (context, state) {
+                    if (state.episode == null) {
+                      return SizedBox.shrink();
+                    }
+
+                    final bool live = state.duration > Duration.zero;
+                    final Episode current = state.episode!;
+
+                    final double progress = live
+                        ? state.progress
+                        : current.progress;
+
+                    final Duration timeLeft = live
+                        ? state.remaining
+                        : current.total - current.listened;
+
+                    return Column(
+                      children: [
+                        24.gap,
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: GestureDetector(
+                            onTap: () => _openPlayer(current),
+                            child: HomePlayerCard(
+                              scheme: current.scheme(context),
+                              imageUrl: current.image,
+                              channel: current.channel,
+                              title: current.title,
+                              progress: progress,
+                              timeLeft: timeLeft,
+                              playing: state.playing,
+                              coverShape: ShapeValues.coverFocused,
+                              onPlayPause: () =>
+                                  context.read<PlayerCubit>().toggle(),
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                    32.gap,
-                  ],
+                        32.gap,
+                      ],
+                    );
+                  },
                 ),
               ),
               SliverOverlapAbsorber(
@@ -207,15 +228,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         children.add(
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-            child: EpisodeCard(
-              episode: ep,
-              playing: identical(ep, _playing),
-              onTap: () {
-                setState(() {
-                  _playing = ep;
-                });
-                _openPlayer();
-              },
+            child: BlocSelector<PlayerCubit, PlayerState, Episode?>(
+              selector: (state) => state.episode,
+              builder: (context, current) => EpisodeCard(
+                episode: ep,
+                playing: identical(ep, current),
+                onTap: () => _openPlayer(ep),
+              ),
             ),
           ),
         );

@@ -12,6 +12,7 @@ class HomePlayerCard extends StatelessWidget {
     required this.title,
     required this.progress,
     required this.timeLeft,
+    required this.playing,
     required this.coverShape,
     this.onPlayPause,
   });
@@ -22,6 +23,7 @@ class HomePlayerCard extends StatelessWidget {
   final String title;
   final double progress;
   final Duration timeLeft;
+  final bool playing;
   final RoundedPolygon coverShape;
   final VoidCallback? onPlayPause;
 
@@ -143,15 +145,17 @@ class HomePlayerCard extends StatelessWidget {
                       clipBehavior: Clip.antiAlias,
                       child: InkWell(
                         onTap: onPlayPause,
-                        child: SizedBox(
-                          width: 64,
-                          height: 64,
-                          child: Icon(
-                            Icons.pause_rounded,
-                            color: cs.primary,
-                            size: 32,
-                          ),
+                      child: SizedBox(
+                        width: 64,
+                        height: 64,
+                        child: Icon(
+                          playing
+                              ? Icons.pause_rounded
+                              : Icons.play_arrow_rounded,
+                          color: cs.primary,
+                          size: 32,
                         ),
+                      ),
                       ),
                     ),
                   ],

@@ -1,4 +1,6 @@
+export 'cubits/player_cubit.dart';
 export 'pages/player_page.dart';
+export 'services/audio_handler_service.dart';
 export 'widgets/player_controls.dart';
 export 'widgets/download_button.dart';
 export 'widgets/fav_button.dart';

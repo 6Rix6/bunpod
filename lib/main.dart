@@ -10,7 +10,7 @@ void main() async {
     );
   };
 
-  setupLocator();
+  await setupLocator();
 
   runApp(const App());
 }

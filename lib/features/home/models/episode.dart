@@ -1,30 +1,32 @@
 import 'package:bunpod/bunpod.dart';
 import 'package:flutter/material.dart';
 
-class Episode {
-  const Episode({
-    required this.bucket,
-    required this.channel,
-    required this.host,
-    required this.title,
-    required this.date,
-    required this.seed,
-    required this.image,
-    required this.total,
-    required this.listened,
-    this.playing = false,
-  });
+import 'package:freezed_annotation/freezed_annotation.dart';
 
-  final Bucket bucket;
-  final String channel;
-  final String host;
-  final String title;
-  final String date;
-  final Color seed;
-  final String image;
-  final Duration total;
-  final Duration listened;
-  final bool playing;
+part 'episode.freezed.dart';
+
+@freezed
+abstract class Episode with _$Episode {
+  const factory Episode({
+    required Bucket bucket,
+    required String channel,
+    required String host,
+    required String title,
+    required String date,
+    required Color seed,
+    required String image,
+
+    /// Placeholder stream URL until real feed data arrives.
+    required String audioUrl,
+    required Duration total,
+    required Duration listened,
+    @Default(false) bool playing,
+  }) = _Episode;
+}
+
+extension EpisodeX on Episode {
+  /// Stable identifier across restarts (mock feeds have no GUID yet).
+  String get id => '$channel|$title';
 
   double get progress =>
       total.inSeconds == 0 ? 0 : listened.inSeconds / total.inSeconds;

@@ -7,32 +7,37 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<ThemeModeCubit, ThemeMode>(
-      bloc: locator<ThemeModeCubit>(),
-      builder: (context, state) {
-        final ThemeMode themeMode = state;
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider.value(value: locator<ThemeModeCubit>()),
+        BlocProvider.value(value: locator<PlayerCubit>()),
+      ],
+      child: BlocBuilder<ThemeModeCubit, ThemeMode>(
+        builder: (context, state) {
+          final ThemeMode themeMode = state;
 
-        return MaterialApp(
-          title: AppValues.title,
-          debugShowCheckedModeBanner: false,
-          themeMode: themeMode,
-          theme: MaterialThemes.light,
-          darkTheme: MaterialThemes.dark,
-          builder: (context, child) {
-            final MediaQueryData mediaQueryData = MediaQuery.of(context);
+          return MaterialApp(
+            title: AppValues.title,
+            debugShowCheckedModeBanner: false,
+            themeMode: themeMode,
+            theme: MaterialThemes.light,
+            darkTheme: MaterialThemes.dark,
+            builder: (context, child) {
+              final MediaQueryData mediaQueryData = MediaQuery.of(context);
 
-            return MediaQuery(
-              data: mediaQueryData.copyWith(
-                textScaler: mediaQueryData.textScaler.clamp(
-                  maxScaleFactor: 1.1,
+              return MediaQuery(
+                data: mediaQueryData.copyWith(
+                  textScaler: mediaQueryData.textScaler.clamp(
+                    maxScaleFactor: 1.1,
+                  ),
                 ),
-              ),
-              child: child!,
-            );
-          },
-          home: const WelcomePage(),
-        );
-      },
+                child: child!,
+              );
+            },
+            home: const WelcomePage(),
+          );
+        },
+      ),
     );
   }
 }
