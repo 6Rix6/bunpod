@@ -10,8 +10,8 @@ Future<void> setupLocator() async {
   // audio_service requires init before runApp.
   final AudioHandlerService handler =
       await AudioHandlerService.initAudioService(
-        'app.bunpod.playback',
-        'BunPod playback',
+        'app.bunpod.channel.audio',
+        'BunPod',
       );
 
   locator
