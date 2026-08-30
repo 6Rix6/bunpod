@@ -36,6 +36,16 @@ dependencies:
   material_wavy_progress_indicator:
     path: packages/material_wavy_progress_indicator
 
+  audio_service: ^0.18.19
+  just_audio: ^0.10.6
+
+  freezed_annotation: ^3.1.0
+  pool: ^1.5.3
+
+  apple_podcast_api:
+    path: packages/apple_podcast_api
+  material_color_utilities: ^0.13.0
+  fpdart: ^1.2.0
 
 dependency_overrides:
   flutter_secure_storage: ^10.0.0
@@ -45,6 +55,9 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_launcher_icons: ^0.14.4
+
+  freezed: ^4.0.0
+  build_runner: ^2.16.0
 
 flutter_launcher_icons:
   android: true

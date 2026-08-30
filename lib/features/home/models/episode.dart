@@ -20,7 +20,6 @@ abstract class Episode with _$Episode {
     required String audioUrl,
     required Duration total,
     required Duration listened,
-    @Default(false) bool playing,
   }) = _Episode;
 }
 
@@ -31,9 +30,5 @@ extension EpisodeX on Episode {
   double get progress =>
       total.inSeconds == 0 ? 0 : listened.inSeconds / total.inSeconds;
 
-  ColorScheme scheme(BuildContext context) => ColorScheme.fromSeed(
-    seedColor: seed,
-    brightness: Theme.of(context).brightness,
-    dynamicSchemeVariant: DynamicSchemeVariant.content,
-  );
+  ColorScheme scheme(BuildContext context) => seed.scheme(context);
 }

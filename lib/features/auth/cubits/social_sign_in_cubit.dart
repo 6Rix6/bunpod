@@ -2,7 +2,7 @@ import 'package:bunpod/bunpod.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// One instance per sign-in button, so busy always means *this* provider.
-class SocialSignInCubit extends Cubit<ViewState> {
+class SocialSignInCubit extends Cubit<ViewState<void>> {
   SocialSignInCubit(this.provider) : super(const ViewIdle());
 
   final AuthProvider provider;
@@ -17,6 +17,6 @@ class SocialSignInCubit extends Cubit<ViewState> {
 
     if (isClosed) return;
 
-    emit(const ViewReady());
+    emit(const ViewReady(null));
   }
 }

@@ -11,6 +11,9 @@ class App extends StatelessWidget {
       providers: [
         BlocProvider.value(value: locator<ThemeModeCubit>()),
         BlocProvider.value(value: locator<PlayerCubit>()),
+        BlocProvider<PodcastFeedsCubit>(
+          create: (_) => locator<PodcastFeedsCubit>(),
+        ),
       ],
       child: BlocBuilder<ThemeModeCubit, ThemeMode>(
         builder: (context, state) {

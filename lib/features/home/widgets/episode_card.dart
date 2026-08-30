@@ -1,6 +1,7 @@
 import 'package:bunpod/bunpod.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:material_shapes/material_shapes.dart';
 import 'package:motor/motor.dart';
@@ -83,28 +84,35 @@ class _EpisodeCardState extends State<EpisodeCard>
           final double marqueeTime =
               _marquee.value * _marqueeCycle.inMilliseconds / 1000;
 
-          return Stack(
-            children: [
-              Positioned.fill(
-                child: ClipRect(
-                  clipper: _FillClipper(start: _kFillStart, fraction: progress),
-                  child: ColoredBox(color: fill),
-                ),
-              ),
-              _content(context, cs, cs.onSurface, marqueeTime),
-              Positioned.fill(
-                child: ClipRect(
-                  clipper: _FillClipper(start: _kFillStart, fraction: progress),
-                  child: _content(context, cs, onFill, marqueeTime),
-                ),
-              ),
-              Positioned.fill(
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(onTap: widget.onTap),
-                ),
-              ),
-            ],
+          return BlocSelector<PlayerCubit, PlayerState, double>(
+            selector: (state) {
+              return state.episode == episode ? state.progress : progress;
+            },
+            builder: (context, p) {
+              return Stack(
+                children: [
+                  Positioned.fill(
+                    child: ClipRect(
+                      clipper: _FillClipper(start: _kFillStart, fraction: p),
+                      child: ColoredBox(color: fill),
+                    ),
+                  ),
+                  _content(context, cs, cs.onSurface, marqueeTime),
+                  Positioned.fill(
+                    child: ClipRect(
+                      clipper: _FillClipper(start: _kFillStart, fraction: p),
+                      child: _content(context, cs, onFill, marqueeTime),
+                    ),
+                  ),
+                  Positioned.fill(
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(onTap: widget.onTap),
+                    ),
+                  ),
+                ],
+              );
+            },
           );
         },
       ),
@@ -185,6 +193,8 @@ class _EpisodeCardState extends State<EpisodeCard>
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.8,
                   ),
+                  maxLines: 1,
+                  overflow: .ellipsis,
                 ),
                 const SizedBox(height: 2),
                 _Title(

@@ -62,7 +62,6 @@ const List<Episode> mockEpisodes = <Episode>[
     audioUrl: _sampleAudio1,
     total: Duration(hours: 1, minutes: 14),
     listened: Duration(minutes: 22),
-    playing: true,
   ),
   Episode(
     bucket: Bucket.today,

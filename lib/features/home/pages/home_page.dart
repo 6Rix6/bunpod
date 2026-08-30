@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:bunpod/bunpod.dart';
 import 'package:expressive_refresh_indicator/expressive_refresh_indicator.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -77,8 +78,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       FilterTab(
         value: null,
         label: 'All',
-        accent: cs.primary,
-        onAccent: cs.onPrimary,
         icon: Icons.grid_view_rounded,
       ),
     ];
@@ -86,14 +85,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     for (final String? value in _tabValues) {
       if (value == null) continue;
       final Episode e = mockEpisodes.firstWhere((e) => e.channel == value);
-      final ColorScheme scheme = e.scheme(context);
 
       tabs.add(
         FilterTab(
           value: e.channel,
           label: e.channel,
-          accent: scheme.primary,
-          onAccent: scheme.onPrimary,
+          seed: e.seed,
           image: e.image,
           shape: ShapeValues.coverFocused,
         ),
@@ -110,6 +107,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         // depth-0 predicate would never trigger.
         notificationPredicate: (notification) => notification.depth == 2,
         child: NestedScrollView(
+          scrollBehavior: const CupertinoScrollBehavior(),
           headerSliverBuilder: (context, innerScrolled) {
             return [
               SliverToBoxAdapter(

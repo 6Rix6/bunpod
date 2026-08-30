@@ -1,6 +1,7 @@
 import 'package:bunpod/bunpod.dart';
 import 'package:expressive_refresh_indicator/expressive_refresh_indicator.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:material_shapes/material_shapes.dart';
 import 'package:motor/motor.dart';
@@ -152,12 +153,15 @@ class _ChannelPageState extends State<ChannelPage> {
                   final Episode ep = episodes[i];
                   return Padding(
                     padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-                    child: EpisodeCard(
-                      episode: ep,
-                      playing: ep.playing,
-                      onTap: () => Navigator.of(
-                        context,
-                      ).push(PlayerPage.route(ep, fromChannel: true)),
+                    child: BlocSelector<PlayerCubit, PlayerState, Episode?>(
+                      selector: (state) => state.episode,
+                      builder: (state, current) => EpisodeCard(
+                        episode: ep,
+                        playing: ep == current,
+                        onTap: () => Navigator.of(
+                          context,
+                        ).push(PlayerPage.route(ep, fromChannel: true)),
+                      ),
                     ),
                   );
                 },

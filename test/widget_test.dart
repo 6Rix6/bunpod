@@ -1,15 +1,22 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility that Flutter provides. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
+import 'dart:developer';
 
-// import 'package:flutter/material.dart';
-// import 'package:flutter_test/flutter_test.dart';
-//
-// import 'package:PROJECTNAME_flutter/main.dart';
+import 'package:bunpod/bunpod.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  // Add your app tests here
+  WidgetsFlutterBinding.ensureInitialized();
+
+  test('feed repository', () async {
+    final datasource = RSSPodcastDataSourceImpl();
+    final repository = PodcastFeedRepositoryImpl(datasource);
+
+    final result = await repository.fetchFeeds();
+
+    result.match((l) => fail('expect success: $l'), (r) {
+      for (var feed in r) {
+        log(feed.channel.name);
+      }
+    });
+  });
 }

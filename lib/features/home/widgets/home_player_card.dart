@@ -90,11 +90,15 @@ class HomePlayerCard extends StatelessWidget {
                           ),
                         ),
                         8.gap,
-                        Text(
-                          channel.toUpperCase(),
-                          style: tt.labelSmall?.copyWith(
-                            color: cs.onPrimary.withValues(alpha: 0.85),
-                            fontWeight: .w700,
+                        Expanded(
+                          child: Text(
+                            channel.toUpperCase(),
+                            style: tt.labelSmall?.copyWith(
+                              color: cs.onPrimary.withValues(alpha: 0.85),
+                              fontWeight: .w700,
+                            ),
+                            maxLines: 1,
+                            overflow: .ellipsis,
                           ),
                         ),
                       ],
@@ -145,17 +149,17 @@ class HomePlayerCard extends StatelessWidget {
                       clipBehavior: Clip.antiAlias,
                       child: InkWell(
                         onTap: onPlayPause,
-                      child: SizedBox(
-                        width: 64,
-                        height: 64,
-                        child: Icon(
-                          playing
-                              ? Icons.pause_rounded
-                              : Icons.play_arrow_rounded,
-                          color: cs.primary,
-                          size: 32,
+                        child: SizedBox(
+                          width: 64,
+                          height: 64,
+                          child: Icon(
+                            playing
+                                ? Icons.pause_rounded
+                                : Icons.play_arrow_rounded,
+                            color: cs.primary,
+                            size: 32,
+                          ),
                         ),
-                      ),
                       ),
                     ),
                   ],

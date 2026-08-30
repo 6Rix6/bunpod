@@ -6,6 +6,17 @@ extension ViewStateX<T> on ViewState<T> {
   bool get isReady => this is ViewReady<T>;
   bool get isFailed => this is ViewFailed<T>;
 
-  T? get data => this is ViewReady<T> ? (this as ViewReady<T>).data : null;
   T get requireData => (this as ViewReady<T>).data!;
+
+  T? get dataOrNull => switch (this) {
+    ViewReady(:final data) => data,
+    ViewBusy(:final data) => data,
+    ViewFailed(:final previousData) => previousData,
+    _ => null,
+  };
+
+  ViewStateError? get errorOrNull => switch (this) {
+    ViewFailed(:final error) => error,
+    _ => null,
+  };
 }

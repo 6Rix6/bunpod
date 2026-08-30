@@ -34,7 +34,9 @@ class _PlayerPageState extends State<PlayerPage> {
   @override
   void initState() {
     super.initState();
-    locator<PlayerCubit>().load(widget.episode);
+
+    final cubit = locator<PlayerCubit>();
+    cubit.load(widget.episode).then((_) => cubit.play());
   }
 
   void _openChannel() {
@@ -82,11 +84,15 @@ class _PlayerPageState extends State<PlayerPage> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        episode.channel.toUpperCase(),
-                        style: tt.labelMedium?.copyWith(
-                          color: cs.onSurfaceVariant,
-                          fontWeight: FontWeight.w700,
+                      Expanded(
+                        child: Text(
+                          episode.channel.toUpperCase(),
+                          style: tt.labelMedium?.copyWith(
+                            color: cs.onSurfaceVariant,
+                            fontWeight: FontWeight.w700,
+                          ),
+                          maxLines: 1,
+                          overflow: .ellipsis,
                         ),
                       ),
                       4.gap,

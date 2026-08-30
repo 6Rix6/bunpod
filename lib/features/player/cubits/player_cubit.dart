@@ -82,12 +82,13 @@ class PlayerCubit extends Cubit<PlayerState> {
   }
 
   Future<void> toggle() async {
-    if (state.playing) {
-      await _handler.pause();
-    } else {
-      await _handler.play();
-    }
+    final Future<void> Function() func = state.playing ? pause : play;
+    await func();
   }
+
+  Future<void> play() => _handler.play();
+
+  Future<void> pause() => _handler.pause();
 
   Future<void> seekTo(Duration position) => _handler.seek(position);
 
