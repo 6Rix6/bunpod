@@ -12,6 +12,7 @@ Future<void> setupLocator() async {
       await AudioHandlerService.initAudioService(
         'app.bunpod.channel.audio',
         'BunPod',
+        androidNotificationIcon: 'drawable/ic_notification',
       );
 
   locator

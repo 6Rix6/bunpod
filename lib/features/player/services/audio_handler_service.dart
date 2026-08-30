@@ -27,8 +27,7 @@ class AudioHandlerService extends BaseAudioHandler with SeekHandler {
 
   Stream<Duration?> get durationStream => _player.durationStream;
 
-  Stream<Duration> get bufferedPositionStream =>
-      _player.bufferedPositionStream;
+  Stream<Duration> get bufferedPositionStream => _player.bufferedPositionStream;
 
   StreamSubscription<ProcessingState>? _processingSubscription;
   StreamSubscription<Duration?>? _durationSubscription;
@@ -100,8 +99,9 @@ class AudioHandlerService extends BaseAudioHandler with SeekHandler {
 
   static Future<AudioHandlerService> initAudioService(
     String channelId,
-    String channelName,
-  ) async {
+    String channelName, {
+    String? androidNotificationIcon,
+  }) async {
     return await AudioService.init(
       builder: () => AudioHandlerService(),
       config: AudioServiceConfig(
@@ -109,6 +109,8 @@ class AudioHandlerService extends BaseAudioHandler with SeekHandler {
         androidNotificationChannelName: channelName,
         androidNotificationOngoing: true,
         androidStopForegroundOnPause: true,
+        androidNotificationIcon:
+            androidNotificationIcon ?? 'mipmap/ic_launcher',
       ),
     );
   }
