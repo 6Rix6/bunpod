@@ -12,6 +12,7 @@ part of 'podcast_feed.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
+
 /// @nodoc
 mixin _$PodcastFeed {
 
@@ -22,6 +23,8 @@ mixin _$PodcastFeed {
 @pragma('vm:prefer-inline')
 $PodcastFeedCopyWith<PodcastFeed> get copyWith => _$PodcastFeedCopyWithImpl<PodcastFeed>(this as PodcastFeed, _$identity);
 
+  /// Serializes this PodcastFeed to a JSON map.
+  Map<String, dynamic> toJson();
 
 
 @override
@@ -29,7 +32,7 @@ bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is PodcastFeed&&(identical(other.channel, channel) || other.channel == channel)&&const DeepCollectionEquality().equals(other.episodes, episodes));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode => Object.hash(runtimeType,channel,const DeepCollectionEquality().hash(episodes));
 
@@ -50,7 +53,7 @@ $Res call({
 });
 
 
-
+$ChannelCopyWith<$Res> get channel;
 
 }
 /// @nodoc
@@ -70,7 +73,16 @@ as Channel,episodes: null == episodes ? _self.episodes : episodes // ignore: cas
 as List<Episode>,
   ));
 }
-
+/// Create a copy of PodcastFeed
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ChannelCopyWith<$Res> get channel {
+  
+  return $ChannelCopyWith<$Res>(_self.channel, (value) {
+    return _then(_self.copyWith(channel: value));
+  });
+}
 }
 
 
@@ -199,11 +211,11 @@ return $default(_that.channel,_that.episodes);case _:
 }
 
 /// @nodoc
-
+@JsonSerializable()
 
 class _PodcastFeed implements PodcastFeed {
   const _PodcastFeed({required this.channel, required  List<Episode> episodes}): _episodes = episodes;
-  
+  factory _PodcastFeed.fromJson(Map<String, dynamic> json) => _$PodcastFeedFromJson(json);
 
 @override final  Channel channel;
  final  List<Episode> _episodes;
@@ -220,14 +232,17 @@ class _PodcastFeed implements PodcastFeed {
 @pragma('vm:prefer-inline')
 _$PodcastFeedCopyWith<_PodcastFeed> get copyWith => __$PodcastFeedCopyWithImpl<_PodcastFeed>(this, _$identity);
 
-
+@override
+Map<String, dynamic> toJson() {
+  return _$PodcastFeedToJson(this, );
+}
 
 @override
 bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is _PodcastFeed&&(identical(other.channel, channel) || other.channel == channel)&&const DeepCollectionEquality().equals(other._episodes, _episodes));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode => Object.hash(runtimeType,channel,const DeepCollectionEquality().hash(_episodes));
 
@@ -248,7 +263,7 @@ $Res call({
 });
 
 
-
+@override $ChannelCopyWith<$Res> get channel;
 
 }
 /// @nodoc
@@ -269,7 +284,16 @@ as List<Episode>,
   ));
 }
 
-
+/// Create a copy of PodcastFeed
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ChannelCopyWith<$Res> get channel {
+  
+  return $ChannelCopyWith<$Res>(_self.channel, (value) {
+    return _then(_self.copyWith(channel: value));
+  });
+}
 }
 
 // dart format on

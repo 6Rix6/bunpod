@@ -204,7 +204,14 @@ void main() {
         'explicit': 'No',
       });
 
-      final shows = result.fold((f) => fail('expected success: $f'), (r) => r);
+      final response = result.fold(
+        (f) => fail('expected success: $f'),
+        (r) => r,
+      );
+      expect(response.data, isNotNull);
+
+      final shows = response.data!;
+
       expect(shows, hasLength(2));
 
       final full = shows[0];
@@ -252,10 +259,13 @@ void main() {
 
       final result = await api.searchAuthors('example host');
 
-      final authors = result.fold(
+      final response = result.fold(
         (f) => fail('expected success: $f'),
         (r) => r,
       );
+      expect(response, isNotNull);
+
+      final authors = response.data!;
       expect(authors, hasLength(1));
       expect(authors.first.artistId, 55555);
       expect(authors.first.artistType, 'Show');
@@ -279,10 +289,13 @@ void main() {
 
       final result = await api.searchEpisodes('episode');
 
-      final episodes = result.fold(
+      final response = result.fold(
         (f) => fail('expected success: $f'),
         (r) => r,
       );
+      expect(response.data, isNotNull);
+
+      final episodes = response.data!;
       expect(episodes, hasLength(1));
 
       final episode = episodes.first;
@@ -330,12 +343,17 @@ void main() {
         (f) => fail('expected success: $f'),
         (r) => r,
       );
-      expect(response.resultCount, 4);
-      expect(response.podcasts, hasLength(1));
-      expect(response.podcasts.first.collectionId, 12345);
-      expect(response.episodes, hasLength(1));
-      expect(response.authors, hasLength(1));
-      expect(response.results.last, isA<UnknownResult>());
+
+      expect(response.data, isNotNull);
+
+      final searchRes = response.data!;
+
+      expect(searchRes.resultCount, 4);
+      expect(searchRes.podcasts, hasLength(1));
+      expect(searchRes.podcasts.first.collectionId, 12345);
+      expect(searchRes.episodes, hasLength(1));
+      expect(searchRes.authors, hasLength(1));
+      expect(searchRes.results.last, isA<UnknownResult>());
     });
   });
 
@@ -359,10 +377,14 @@ void main() {
         'country': 'us',
       });
 
-      final episodes = result.fold(
+      final response = result.fold(
         (f) => fail('expected success: $f'),
         (r) => r,
       );
+      expect(response.data, isNotNull);
+
+      final episodes = response.data!;
+
       expect(episodes, hasLength(1));
       expect(episodes.first.trackName, 'Episode 1');
     });
@@ -394,10 +416,15 @@ void main() {
         adapter.lastOptions!.queryParameters.containsKey('entity'),
         isFalse,
       );
-      final authors = result.fold(
+      final response = result.fold(
         (f) => fail('expected success: $f'),
         (r) => r,
       );
+
+      expect(response.data, isNotNull);
+
+      final authors = response.data!;
+
       expect(authors.first.artistId, 55555);
     });
 
@@ -420,7 +447,12 @@ void main() {
         (f) => fail('expected success: $f'),
         (r) => r,
       );
-      expect(response.results.map((r) => r.runtimeType), [
+
+      expect(response.data, isNotNull);
+
+      final searchRes = response.data!;
+
+      expect(searchRes.results.map((r) => r.runtimeType), [
         PodcastResult,
         AuthorResult,
       ]);
@@ -440,7 +472,14 @@ void main() {
         adapter.lastOptions!.uri,
         Uri.parse('https://example.com/feed.xml'),
       );
-      final feed = result.fold((f) => fail('expected success: $f'), (r) => r);
+      final response = result.fold(
+        (f) => fail('expected success: $f'),
+        (r) => r,
+      );
+
+      expect(response.data, isNotNull);
+
+      final feed = response.data!;
 
       expect(feed.url, Uri.parse('https://example.com/feed.xml'));
       expect(feed.title, 'Example Show & More');

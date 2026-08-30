@@ -31,4 +31,12 @@ Future<void> setupLocator() async {
       dispose: (instance) => instance.close(),
     )
     ..registerFactory<PodcastFeedsCubit>(() => PodcastFeedsCubit(locator()));
+
+  final database = AppDatabase();
+
+  locator
+    ..registerSingleton<AppDatabase>(database)
+    ..registerSingleton<FeedDao>(database.feedDao)
+    ..registerSingleton<SubscriptionDao>(database.subscriptionDao)
+    ..registerSingleton<PlaybackDao>(database.playbackDao);
 }

@@ -8,6 +8,7 @@ import 'package:apple_podcast_api/src/models/podcast_author.dart';
 import 'package:apple_podcast_api/src/models/podcast_episode.dart';
 import 'package:apple_podcast_api/src/models/search_response.dart';
 import 'package:apple_podcast_api/src/models/types.dart';
+import 'package:apple_podcast_api/src/utils/response_extension.dart';
 import 'package:dio/dio.dart';
 import 'package:fpdart/fpdart.dart';
 
@@ -222,10 +223,12 @@ class ItunesPodcastApi {
 
 // Parses the raw response body into a strongly typed value.
 extension _ResponseParsing on TaskEither<ApiFailure, Response<dynamic>> {
-  TaskEither<ApiFailure, T> parse<T>(
+  TaskEither<ApiFailure, Response<T>> parse<T>(
     T Function(Map<String, dynamic> data) parser,
   ) {
-    return flatMap((response) => _parseResponse(response, parser));
+    return flatMap(
+      (response) => _parseResponse(response, parser).map(response.copyWithData),
+    );
   }
 
   static TaskEither<ApiFailure, T> _parseResponse<T>(

@@ -1,9 +1,13 @@
+import 'dart:convert';
+
 import 'package:apple_podcast_api/src/client/base_handler.dart';
 import 'package:apple_podcast_api/src/utils/feed_mapper.dart';
 import 'package:apple_podcast_api/src/models/api_failure.dart';
 import 'package:apple_podcast_api/src/models/itunes_podcast.dart';
 import 'package:apple_podcast_api/src/models/rss_podcast_feed.dart';
 import 'package:apple_podcast_api/src/models/types.dart';
+import 'package:apple_podcast_api/src/utils/response_extension.dart';
+import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:rss_dart/dart_rss.dart';
@@ -24,35 +28,57 @@ class RSSFeedClient {
   ///
   /// Malformed XML or a missing channel element results in a
   /// [ParseFailure]; individual missing tags simply stay `null`.
-  ApiResult<RSSPodcastFeed> fetchFeed(Uri feedUrl) {
-    return _fetchFeedRaw(feedUrl)
-        .flatMap((body) => parseFeedTask(feedUrl, body))
-        .run();
+  ApiResult<RSSPodcastFeed> fetchFeed(
+    Uri feedUrl, {
+    Map<String, dynamic>? headers,
+  }) {
+    return _fetchFeedRaw(feedUrl, headers: headers).flatMap((response) {
+      final body = response.data;
+      if (body == null || body.isEmpty) {
+        return TaskEither<ApiFailure, Response<RSSPodcastFeed>>.left(
+          ParseFailure('Response body is empty', StackTrace.current),
+        );
+      }
+
+      return parseFeedTask(
+        feedUrl,
+        body,
+      ).map((feed) => response.copyWithData(feed));
+    }).run();
   }
 
   /// Fetches the RSS feed at [feedUrl] and returns the raw response body
   /// without parsing it into a [RSSPodcastFeed].
-  ApiResult<String> fetchFeedRaw(Uri feedUrl) {
-    return _fetchFeedRaw(feedUrl).run();
+  ApiResult<String> fetchFeedRaw(Uri feedUrl, {Map<String, dynamic>? headers}) {
+    return _fetchFeedRaw(feedUrl, headers: headers).run();
   }
 
-  TaskEither<ApiFailure, String> _fetchFeedRaw(Uri feedUrl) {
-    return _handler.getPlainText(feedUrl);
+  TaskEither<ApiFailure, Response<String>> _fetchFeedRaw(
+    Uri feedUrl, {
+    Map<String, dynamic>? headers,
+  }) {
+    return _handler.getPlainText(feedUrl, headers: headers);
   }
 
   /// Convenience wrapper around [fetchFeed] using the [ItunesPodcast.feedUrl].
-  ApiResult<RSSPodcastFeed> fetchFeedFor(ItunesPodcast show) {
+  ApiResult<RSSPodcastFeed> fetchFeedFor(
+    ItunesPodcast show, {
+    Map<String, dynamic>? headers,
+  }) {
     return _resolveFeedUri(show).match(
       (failure) => Future.value(Either.left(failure)),
-      (uri) => fetchFeed(uri),
+      (uri) => fetchFeed(uri, headers: headers),
     );
   }
 
   /// Convenience wrapper around [fetchFeedRaw] using the [Podcast.feedUrl].
-  ApiResult<String> fetchFeedRawFor(ItunesPodcast show) {
+  ApiResult<String> fetchFeedRawFor(
+    ItunesPodcast show, {
+    Map<String, dynamic>? headers,
+  }) {
     return _resolveFeedUri(show).match(
       (failure) => Future.value(Either.left(failure)),
-      (uri) => fetchFeedRaw(uri),
+      (uri) => fetchFeedRaw(uri, headers: headers),
     );
   }
 
@@ -72,6 +98,14 @@ class RSSFeedClient {
   /// or throwing error when parse failed.
   static RSSPodcastFeed parseFeed((Uri url, String body) args) {
     return mapRssFeed(args.$1, RssFeed.parse(args.$2));
+  }
+
+  static ({String hash, RSSPodcastFeed feed}) parseFeedWithHash(
+    (Uri url, String body) args,
+  ) {
+    final hash = sha256.convert(utf8.encode(args.$2)).toString();
+    final feed = parseFeed(args);
+    return (hash: hash, feed: feed);
   }
 
   /// Validates and parses [show.feedUrl], returning either a [ParseFailure]

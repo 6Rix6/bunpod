@@ -87,29 +87,29 @@ class BaseHandler {
 
   // The iTunes Search API only accepts GET requests; all query parameters
   // are built by the caller (ItunesPodcastApi).
-  HandlerTask<dynamic> get(String path, Map<String, Object?> queryParameters) {
+  HandlerTask<dynamic> get(
+    String path,
+    Map<String, Object?> queryParameters, {
+    Map<String, dynamic>? headers,
+  }) {
     return _task(
-      () => _httpClient.get<dynamic>(path, queryParameters: queryParameters),
+      () => _httpClient.get<dynamic>(
+        path,
+        options: Options(headers: headers),
+        queryParameters: queryParameters,
+      ),
     );
   }
 
   // Fetches a resource as raw text (used for RSS feeds). An absolute [url]
   // overrides the configured base URL.
-  TaskEither<ApiFailure, String> getPlainText(Uri url) {
+  HandlerTask<String> getPlainText(Uri url, {Map<String, dynamic>? headers}) {
     return _task(
       () => _httpClient.get<String>(
         url.toString(),
-        options: Options(responseType: ResponseType.plain),
+        options: Options(responseType: ResponseType.plain, headers: headers),
       ),
-    ).flatMap((response) {
-      final body = response.data;
-      if (body == null || body.isEmpty) {
-        return TaskEither.left(
-          const ParseFailure('Response body is empty', null),
-        );
-      }
-      return TaskEither.right(body);
-    });
+    );
   }
 
   void close() => _httpClient.close();

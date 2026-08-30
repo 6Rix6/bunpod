@@ -12,10 +12,11 @@ part of 'episode.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
+
 /// @nodoc
 mixin _$Episode {
 
- Bucket get bucket; String get channel; String get host; String get title; String get date; Color get seed; String get image;/// Placeholder stream URL until real feed data arrives.
+ Bucket get bucket; String get channel; String get host; String get title; String get date; int get color; String get image;/// Placeholder stream URL until real feed data arrives.
  String get audioUrl; Duration get total; Duration get listened;
 /// Create a copy of Episode
 /// with the given fields replaced by the non-null parameter values.
@@ -23,20 +24,22 @@ mixin _$Episode {
 @pragma('vm:prefer-inline')
 $EpisodeCopyWith<Episode> get copyWith => _$EpisodeCopyWithImpl<Episode>(this as Episode, _$identity);
 
+  /// Serializes this Episode to a JSON map.
+  Map<String, dynamic> toJson();
 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Episode&&(identical(other.bucket, bucket) || other.bucket == bucket)&&(identical(other.channel, channel) || other.channel == channel)&&(identical(other.host, host) || other.host == host)&&(identical(other.title, title) || other.title == title)&&(identical(other.date, date) || other.date == date)&&(identical(other.seed, seed) || other.seed == seed)&&(identical(other.image, image) || other.image == image)&&(identical(other.audioUrl, audioUrl) || other.audioUrl == audioUrl)&&(identical(other.total, total) || other.total == total)&&(identical(other.listened, listened) || other.listened == listened));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Episode&&(identical(other.bucket, bucket) || other.bucket == bucket)&&(identical(other.channel, channel) || other.channel == channel)&&(identical(other.host, host) || other.host == host)&&(identical(other.title, title) || other.title == title)&&(identical(other.date, date) || other.date == date)&&(identical(other.color, color) || other.color == color)&&(identical(other.image, image) || other.image == image)&&(identical(other.audioUrl, audioUrl) || other.audioUrl == audioUrl)&&(identical(other.total, total) || other.total == total)&&(identical(other.listened, listened) || other.listened == listened));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,bucket,channel,host,title,date,seed,image,audioUrl,total,listened);
+int get hashCode => Object.hash(runtimeType,bucket,channel,host,title,date,color,image,audioUrl,total,listened);
 
 @override
 String toString() {
-  return 'Episode(bucket: $bucket, channel: $channel, host: $host, title: $title, date: $date, seed: $seed, image: $image, audioUrl: $audioUrl, total: $total, listened: $listened)';
+  return 'Episode(bucket: $bucket, channel: $channel, host: $host, title: $title, date: $date, color: $color, image: $image, audioUrl: $audioUrl, total: $total, listened: $listened)';
 }
 
 
@@ -47,7 +50,7 @@ abstract mixin class $EpisodeCopyWith<$Res>  {
   factory $EpisodeCopyWith(Episode value, $Res Function(Episode) _then) = _$EpisodeCopyWithImpl;
 @useResult
 $Res call({
- Bucket bucket, String channel, String host, String title, String date, Color seed, String image, String audioUrl, Duration total, Duration listened
+ Bucket bucket, String channel, String host, String title, String date, int color, String image, String audioUrl, Duration total, Duration listened
 });
 
 
@@ -64,15 +67,15 @@ class _$EpisodeCopyWithImpl<$Res>
 
 /// Create a copy of Episode
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? bucket = null,Object? channel = null,Object? host = null,Object? title = null,Object? date = null,Object? seed = null,Object? image = null,Object? audioUrl = null,Object? total = null,Object? listened = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? bucket = null,Object? channel = null,Object? host = null,Object? title = null,Object? date = null,Object? color = null,Object? image = null,Object? audioUrl = null,Object? total = null,Object? listened = null,}) {
   return _then(Episode(
 bucket: null == bucket ? _self.bucket : bucket // ignore: cast_nullable_to_non_nullable
 as Bucket,channel: null == channel ? _self.channel : channel // ignore: cast_nullable_to_non_nullable
 as String,host: null == host ? _self.host : host // ignore: cast_nullable_to_non_nullable
 as String,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String,date: null == date ? _self.date : date // ignore: cast_nullable_to_non_nullable
-as String,seed: null == seed ? _self.seed : seed // ignore: cast_nullable_to_non_nullable
-as Color,image: null == image ? _self.image : image // ignore: cast_nullable_to_non_nullable
+as String,color: null == color ? _self.color : color // ignore: cast_nullable_to_non_nullable
+as int,image: null == image ? _self.image : image // ignore: cast_nullable_to_non_nullable
 as String,audioUrl: null == audioUrl ? _self.audioUrl : audioUrl // ignore: cast_nullable_to_non_nullable
 as String,total: null == total ? _self.total : total // ignore: cast_nullable_to_non_nullable
 as Duration,listened: null == listened ? _self.listened : listened // ignore: cast_nullable_to_non_nullable
@@ -161,10 +164,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Bucket bucket,  String channel,  String host,  String title,  String date,  Color seed,  String image,  String audioUrl,  Duration total,  Duration listened)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Bucket bucket,  String channel,  String host,  String title,  String date,  int color,  String image,  String audioUrl,  Duration total,  Duration listened)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Episode() when $default != null:
-return $default(_that.bucket,_that.channel,_that.host,_that.title,_that.date,_that.seed,_that.image,_that.audioUrl,_that.total,_that.listened);case _:
+return $default(_that.bucket,_that.channel,_that.host,_that.title,_that.date,_that.color,_that.image,_that.audioUrl,_that.total,_that.listened);case _:
   return orElse();
 
 }
@@ -182,10 +185,10 @@ return $default(_that.bucket,_that.channel,_that.host,_that.title,_that.date,_th
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Bucket bucket,  String channel,  String host,  String title,  String date,  Color seed,  String image,  String audioUrl,  Duration total,  Duration listened)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Bucket bucket,  String channel,  String host,  String title,  String date,  int color,  String image,  String audioUrl,  Duration total,  Duration listened)  $default,) {final _that = this;
 switch (_that) {
 case _Episode():
-return $default(_that.bucket,_that.channel,_that.host,_that.title,_that.date,_that.seed,_that.image,_that.audioUrl,_that.total,_that.listened);case _:
+return $default(_that.bucket,_that.channel,_that.host,_that.title,_that.date,_that.color,_that.image,_that.audioUrl,_that.total,_that.listened);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -202,10 +205,10 @@ return $default(_that.bucket,_that.channel,_that.host,_that.title,_that.date,_th
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Bucket bucket,  String channel,  String host,  String title,  String date,  Color seed,  String image,  String audioUrl,  Duration total,  Duration listened)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Bucket bucket,  String channel,  String host,  String title,  String date,  int color,  String image,  String audioUrl,  Duration total,  Duration listened)?  $default,) {final _that = this;
 switch (_that) {
 case _Episode() when $default != null:
-return $default(_that.bucket,_that.channel,_that.host,_that.title,_that.date,_that.seed,_that.image,_that.audioUrl,_that.total,_that.listened);case _:
+return $default(_that.bucket,_that.channel,_that.host,_that.title,_that.date,_that.color,_that.image,_that.audioUrl,_that.total,_that.listened);case _:
   return null;
 
 }
@@ -214,18 +217,18 @@ return $default(_that.bucket,_that.channel,_that.host,_that.title,_that.date,_th
 }
 
 /// @nodoc
-
+@JsonSerializable()
 
 class _Episode implements Episode {
-  const _Episode({required this.bucket, required this.channel, required this.host, required this.title, required this.date, required this.seed, required this.image, required this.audioUrl, required this.total, required this.listened});
-  
+  const _Episode({required this.bucket, required this.channel, required this.host, required this.title, required this.date, required this.color, required this.image, required this.audioUrl, required this.total, required this.listened});
+  factory _Episode.fromJson(Map<String, dynamic> json) => _$EpisodeFromJson(json);
 
 @override final  Bucket bucket;
 @override final  String channel;
 @override final  String host;
 @override final  String title;
 @override final  String date;
-@override final  Color seed;
+@override final  int color;
 @override final  String image;
 /// Placeholder stream URL until real feed data arrives.
 @override final  String audioUrl;
@@ -238,20 +241,23 @@ class _Episode implements Episode {
 @pragma('vm:prefer-inline')
 _$EpisodeCopyWith<_Episode> get copyWith => __$EpisodeCopyWithImpl<_Episode>(this, _$identity);
 
-
+@override
+Map<String, dynamic> toJson() {
+  return _$EpisodeToJson(this, );
+}
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Episode&&(identical(other.bucket, bucket) || other.bucket == bucket)&&(identical(other.channel, channel) || other.channel == channel)&&(identical(other.host, host) || other.host == host)&&(identical(other.title, title) || other.title == title)&&(identical(other.date, date) || other.date == date)&&(identical(other.seed, seed) || other.seed == seed)&&(identical(other.image, image) || other.image == image)&&(identical(other.audioUrl, audioUrl) || other.audioUrl == audioUrl)&&(identical(other.total, total) || other.total == total)&&(identical(other.listened, listened) || other.listened == listened));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Episode&&(identical(other.bucket, bucket) || other.bucket == bucket)&&(identical(other.channel, channel) || other.channel == channel)&&(identical(other.host, host) || other.host == host)&&(identical(other.title, title) || other.title == title)&&(identical(other.date, date) || other.date == date)&&(identical(other.color, color) || other.color == color)&&(identical(other.image, image) || other.image == image)&&(identical(other.audioUrl, audioUrl) || other.audioUrl == audioUrl)&&(identical(other.total, total) || other.total == total)&&(identical(other.listened, listened) || other.listened == listened));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,bucket,channel,host,title,date,seed,image,audioUrl,total,listened);
+int get hashCode => Object.hash(runtimeType,bucket,channel,host,title,date,color,image,audioUrl,total,listened);
 
 @override
 String toString() {
-  return 'Episode(bucket: $bucket, channel: $channel, host: $host, title: $title, date: $date, seed: $seed, image: $image, audioUrl: $audioUrl, total: $total, listened: $listened)';
+  return 'Episode(bucket: $bucket, channel: $channel, host: $host, title: $title, date: $date, color: $color, image: $image, audioUrl: $audioUrl, total: $total, listened: $listened)';
 }
 
 
@@ -262,7 +268,7 @@ abstract mixin class _$EpisodeCopyWith<$Res> implements $EpisodeCopyWith<$Res> {
   factory _$EpisodeCopyWith(_Episode value, $Res Function(_Episode) _then) = __$EpisodeCopyWithImpl;
 @override @useResult
 $Res call({
- Bucket bucket, String channel, String host, String title, String date, Color seed, String image, String audioUrl, Duration total, Duration listened
+ Bucket bucket, String channel, String host, String title, String date, int color, String image, String audioUrl, Duration total, Duration listened
 });
 
 
@@ -279,15 +285,15 @@ class __$EpisodeCopyWithImpl<$Res>
 
 /// Create a copy of Episode
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? bucket = null,Object? channel = null,Object? host = null,Object? title = null,Object? date = null,Object? seed = null,Object? image = null,Object? audioUrl = null,Object? total = null,Object? listened = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? bucket = null,Object? channel = null,Object? host = null,Object? title = null,Object? date = null,Object? color = null,Object? image = null,Object? audioUrl = null,Object? total = null,Object? listened = null,}) {
   return _then(_Episode(
 bucket: null == bucket ? _self.bucket : bucket // ignore: cast_nullable_to_non_nullable
 as Bucket,channel: null == channel ? _self.channel : channel // ignore: cast_nullable_to_non_nullable
 as String,host: null == host ? _self.host : host // ignore: cast_nullable_to_non_nullable
 as String,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String,date: null == date ? _self.date : date // ignore: cast_nullable_to_non_nullable
-as String,seed: null == seed ? _self.seed : seed // ignore: cast_nullable_to_non_nullable
-as Color,image: null == image ? _self.image : image // ignore: cast_nullable_to_non_nullable
+as String,color: null == color ? _self.color : color // ignore: cast_nullable_to_non_nullable
+as int,image: null == image ? _self.image : image // ignore: cast_nullable_to_non_nullable
 as String,audioUrl: null == audioUrl ? _self.audioUrl : audioUrl // ignore: cast_nullable_to_non_nullable
 as String,total: null == total ? _self.total : total // ignore: cast_nullable_to_non_nullable
 as Duration,listened: null == listened ? _self.listened : listened // ignore: cast_nullable_to_non_nullable

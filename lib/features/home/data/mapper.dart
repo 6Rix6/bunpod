@@ -14,11 +14,7 @@ extension PodcastFeedMapper on RSSPodcastFeed {
 
     final eps = episodes
         .map(
-          (e) => e.toEpisode(
-            seed: seed,
-            channel: channel.name,
-            host: channel.host,
-          ),
+          (e) => e.toEpisode(seed: seed, channel: channel),
         )
         .whereType<Episode>()
         .toList();
@@ -36,7 +32,7 @@ extension PodcastFeedMapper on RSSPodcastFeed {
     return Channel(
       name: title!,
       host: ownerName!,
-      seed: seed,
+      color: seed.toARGB32(),
       image: imageUrl!,
       description: description ?? '',
     );
@@ -48,27 +44,24 @@ extension FeedEpisodeMapper on RSSFeedEpisode {
   /// Returns `null` if any required non-nullable fields are missing.
   Episode? toEpisode({
     required Color seed,
-    required String channel,
-    required String host,
+    required Channel channel,
   }) {
     // Check required non-nullable fields.
     if (title == null ||
-        this.publishedAt == null ||
+        publishedAt == null ||
         audioUrl == null ||
         duration == null) {
       return null;
     }
 
-    final publishedAt = this.publishedAt!;
-
     return Episode(
-      bucket: _calculateBucket(publishedAt),
-      channel: channel,
-      host: host,
+      bucket: _calculateBucket(publishedAt!),
+      channel: channel.name,
+      host: channel.host,
       title: title!,
-      date: publishedAt.toIso8601String(),
-      seed: seed,
-      image: imageUrl ?? '',
+      date: publishedAt!.toIso8601String(),
+      color: seed.toARGB32(),
+      image: imageUrl ?? channel.image,
       audioUrl: audioUrl!,
       total: duration!,
       listened: Duration.zero,

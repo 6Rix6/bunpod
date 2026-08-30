@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'episode.freezed.dart';
+part 'episode.g.dart';
 
 @freezed
 abstract class Episode with _$Episode {
@@ -13,7 +14,7 @@ abstract class Episode with _$Episode {
     required String host,
     required String title,
     required String date,
-    required Color seed,
+    required int color,
     required String image,
 
     /// Placeholder stream URL until real feed data arrives.
@@ -21,6 +22,9 @@ abstract class Episode with _$Episode {
     required Duration total,
     required Duration listened,
   }) = _Episode;
+
+  factory Episode.fromJson(Map<String, dynamic> json) =>
+      _$EpisodeFromJson(json);
 }
 
 extension EpisodeX on Episode {
@@ -30,5 +34,6 @@ extension EpisodeX on Episode {
   double get progress =>
       total.inSeconds == 0 ? 0 : listened.inSeconds / total.inSeconds;
 
+  Color get seed => Color(color);
   ColorScheme scheme(BuildContext context) => seed.scheme(context);
 }

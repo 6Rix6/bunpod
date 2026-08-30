@@ -88,7 +88,7 @@ List<Channel> get mockChannels {
         Channel(
           name: e.channel,
           host: e.host,
-          seed: e.seed,
+          color: e.seed.toARGB32(),
           image: e.image,
           description: _channelDescriptions[e.channel] ?? '',
         ),

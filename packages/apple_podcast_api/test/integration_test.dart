@@ -19,7 +19,7 @@ void main() {
     final res = await client.searchPodcasts('ゆる言語学');
 
     res.match((l) => fail(l.toString()), (r) {
-      for (final item in r) {
+      for (final item in r.data ?? []) {
         log(item.trackName ?? '');
       }
     });

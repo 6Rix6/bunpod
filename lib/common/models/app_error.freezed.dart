@@ -12,11 +12,57 @@ part of 'app_error.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
+AppError _$AppErrorFromJson(
+  Map<String, dynamic> json
+) {
+        switch (json['runtimeType']) {
+                  case 'network':
+          return NetworkError.fromJson(
+            json
+          );
+                case 'cancelled':
+          return CancelledError.fromJson(
+            json
+          );
+                case 'http':
+          return HttpError.fromJson(
+            json
+          );
+                case 'parse':
+          return ParseError.fromJson(
+            json
+          );
+                case 'cache':
+          return CacheError.fromJson(
+            json
+          );
+                case 'multiple':
+          return MultipleError.fromJson(
+            json
+          );
+                case 'unknown':
+          return UnknownError.fromJson(
+            json
+          );
+        
+          default:
+            throw CheckedFromJsonException(
+  json,
+  'runtimeType',
+  'AppError',
+  'Invalid union type "${json['runtimeType']}"!'
+);
+        }
+      
+}
+
 /// @nodoc
 mixin _$AppError {
 
 
 
+  /// Serializes this AppError to a JSON map.
+  Map<String, dynamic> toJson();
 
 
 @override
@@ -24,7 +70,7 @@ bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is AppError);
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode => runtimeType.hashCode;
 
@@ -135,7 +181,7 @@ return unknown(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String message,  Object? cause)?  network,TResult Function()?  cancelled,TResult Function( int statusCode,  String message,  Object? responseBody)?  http,TResult Function( Object message,  StackTrace? stackTrace)?  parse,TResult Function( String message)?  cache,TResult Function( List<AppError> errors)?  multiple,TResult Function( Object error,  StackTrace stackTrace)?  unknown,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String message, @ObjectConverter()  Object? cause)?  network,TResult Function()?  cancelled,TResult Function( int statusCode,  String message, @ObjectConverter()  Object? responseBody)?  http,TResult Function(@RequiredObjectConverter()  Object message, @StackTraceConverter()  StackTrace? stackTrace)?  parse,TResult Function( String message)?  cache,TResult Function( List<AppError> errors)?  multiple,TResult Function(@RequiredObjectConverter()  Object error, @RequiredStackTraceConverter()  StackTrace stackTrace)?  unknown,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case NetworkError() when network != null:
 return network(_that.message,_that.cause);case CancelledError() when cancelled != null:
@@ -162,7 +208,7 @@ return unknown(_that.error,_that.stackTrace);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String message,  Object? cause)  network,required TResult Function()  cancelled,required TResult Function( int statusCode,  String message,  Object? responseBody)  http,required TResult Function( Object message,  StackTrace? stackTrace)  parse,required TResult Function( String message)  cache,required TResult Function( List<AppError> errors)  multiple,required TResult Function( Object error,  StackTrace stackTrace)  unknown,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String message, @ObjectConverter()  Object? cause)  network,required TResult Function()  cancelled,required TResult Function( int statusCode,  String message, @ObjectConverter()  Object? responseBody)  http,required TResult Function(@RequiredObjectConverter()  Object message, @StackTraceConverter()  StackTrace? stackTrace)  parse,required TResult Function( String message)  cache,required TResult Function( List<AppError> errors)  multiple,required TResult Function(@RequiredObjectConverter()  Object error, @RequiredStackTraceConverter()  StackTrace stackTrace)  unknown,}) {final _that = this;
 switch (_that) {
 case NetworkError():
 return network(_that.message,_that.cause);case CancelledError():
@@ -185,7 +231,7 @@ return unknown(_that.error,_that.stackTrace);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String message,  Object? cause)?  network,TResult? Function()?  cancelled,TResult? Function( int statusCode,  String message,  Object? responseBody)?  http,TResult? Function( Object message,  StackTrace? stackTrace)?  parse,TResult? Function( String message)?  cache,TResult? Function( List<AppError> errors)?  multiple,TResult? Function( Object error,  StackTrace stackTrace)?  unknown,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String message, @ObjectConverter()  Object? cause)?  network,TResult? Function()?  cancelled,TResult? Function( int statusCode,  String message, @ObjectConverter()  Object? responseBody)?  http,TResult? Function(@RequiredObjectConverter()  Object message, @StackTraceConverter()  StackTrace? stackTrace)?  parse,TResult? Function( String message)?  cache,TResult? Function( List<AppError> errors)?  multiple,TResult? Function(@RequiredObjectConverter()  Object error, @RequiredStackTraceConverter()  StackTrace stackTrace)?  unknown,}) {final _that = this;
 switch (_that) {
 case NetworkError() when network != null:
 return network(_that.message,_that.cause);case CancelledError() when cancelled != null:
@@ -203,14 +249,18 @@ return unknown(_that.error,_that.stackTrace);case _:
 }
 
 /// @nodoc
-
+@JsonSerializable()
 
 class NetworkError implements AppError {
-  const NetworkError(this.message, {this.cause});
-  
+  const NetworkError(this.message, {@ObjectConverter() this.cause,  String? $type}): $type = $type ?? 'network';
+  factory NetworkError.fromJson(Map<String, dynamic> json) => _$NetworkErrorFromJson(json);
 
  final  String message;
- final  Object? cause;
+@ObjectConverter() final  Object? cause;
+
+@JsonKey(name: 'runtimeType')
+final String $type;
+
 
 /// Create a copy of AppError
 /// with the given fields replaced by the non-null parameter values.
@@ -218,14 +268,17 @@ class NetworkError implements AppError {
 @pragma('vm:prefer-inline')
 $NetworkErrorCopyWith<NetworkError> get copyWith => _$NetworkErrorCopyWithImpl<NetworkError>(this, _$identity);
 
-
+@override
+Map<String, dynamic> toJson() {
+  return _$NetworkErrorToJson(this, );
+}
 
 @override
 bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is NetworkError&&(identical(other.message, message) || other.message == message)&&const DeepCollectionEquality().equals(other.cause, cause));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode => Object.hash(runtimeType,message,const DeepCollectionEquality().hash(cause));
 
@@ -242,7 +295,7 @@ abstract mixin class $NetworkErrorCopyWith<$Res> implements $AppErrorCopyWith<$R
   factory $NetworkErrorCopyWith(NetworkError value, $Res Function(NetworkError) _then) = _$NetworkErrorCopyWithImpl;
 @useResult
 $Res call({
- String message, Object? cause
+ String message,@ObjectConverter() Object? cause
 });
 
 
@@ -270,23 +323,30 @@ as String,cause: freezed == cause ? _self.cause : cause ,
 }
 
 /// @nodoc
-
+@JsonSerializable()
 
 class CancelledError implements AppError {
-  const CancelledError();
-  
+  const CancelledError({ String? $type}): $type = $type ?? 'cancelled';
+  factory CancelledError.fromJson(Map<String, dynamic> json) => _$CancelledErrorFromJson(json);
 
 
 
+@JsonKey(name: 'runtimeType')
+final String $type;
 
 
+
+@override
+Map<String, dynamic> toJson() {
+  return _$CancelledErrorToJson(this, );
+}
 
 @override
 bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is CancelledError);
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode => runtimeType.hashCode;
 
@@ -302,15 +362,19 @@ String toString() {
 
 
 /// @nodoc
-
+@JsonSerializable()
 
 class HttpError implements AppError {
-  const HttpError({required this.statusCode, required this.message, this.responseBody});
-  
+  const HttpError({required this.statusCode, required this.message, @ObjectConverter() this.responseBody,  String? $type}): $type = $type ?? 'http';
+  factory HttpError.fromJson(Map<String, dynamic> json) => _$HttpErrorFromJson(json);
 
  final  int statusCode;
  final  String message;
- final  Object? responseBody;
+@ObjectConverter() final  Object? responseBody;
+
+@JsonKey(name: 'runtimeType')
+final String $type;
+
 
 /// Create a copy of AppError
 /// with the given fields replaced by the non-null parameter values.
@@ -318,14 +382,17 @@ class HttpError implements AppError {
 @pragma('vm:prefer-inline')
 $HttpErrorCopyWith<HttpError> get copyWith => _$HttpErrorCopyWithImpl<HttpError>(this, _$identity);
 
-
+@override
+Map<String, dynamic> toJson() {
+  return _$HttpErrorToJson(this, );
+}
 
 @override
 bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is HttpError&&(identical(other.statusCode, statusCode) || other.statusCode == statusCode)&&(identical(other.message, message) || other.message == message)&&const DeepCollectionEquality().equals(other.responseBody, responseBody));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode => Object.hash(runtimeType,statusCode,message,const DeepCollectionEquality().hash(responseBody));
 
@@ -342,7 +409,7 @@ abstract mixin class $HttpErrorCopyWith<$Res> implements $AppErrorCopyWith<$Res>
   factory $HttpErrorCopyWith(HttpError value, $Res Function(HttpError) _then) = _$HttpErrorCopyWithImpl;
 @useResult
 $Res call({
- int statusCode, String message, Object? responseBody
+ int statusCode, String message,@ObjectConverter() Object? responseBody
 });
 
 
@@ -371,14 +438,18 @@ as String,responseBody: freezed == responseBody ? _self.responseBody : responseB
 }
 
 /// @nodoc
-
+@JsonSerializable()
 
 class ParseError implements AppError {
-  const ParseError(this.message, this.stackTrace);
-  
+  const ParseError(@RequiredObjectConverter() this.message, @StackTraceConverter() this.stackTrace, { String? $type}): $type = $type ?? 'parse';
+  factory ParseError.fromJson(Map<String, dynamic> json) => _$ParseErrorFromJson(json);
 
- final  Object message;
- final  StackTrace? stackTrace;
+@RequiredObjectConverter() final  Object message;
+@StackTraceConverter() final  StackTrace? stackTrace;
+
+@JsonKey(name: 'runtimeType')
+final String $type;
+
 
 /// Create a copy of AppError
 /// with the given fields replaced by the non-null parameter values.
@@ -386,14 +457,17 @@ class ParseError implements AppError {
 @pragma('vm:prefer-inline')
 $ParseErrorCopyWith<ParseError> get copyWith => _$ParseErrorCopyWithImpl<ParseError>(this, _$identity);
 
-
+@override
+Map<String, dynamic> toJson() {
+  return _$ParseErrorToJson(this, );
+}
 
 @override
 bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is ParseError&&const DeepCollectionEquality().equals(other.message, message)&&(identical(other.stackTrace, stackTrace) || other.stackTrace == stackTrace));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(message),stackTrace);
 
@@ -410,7 +484,7 @@ abstract mixin class $ParseErrorCopyWith<$Res> implements $AppErrorCopyWith<$Res
   factory $ParseErrorCopyWith(ParseError value, $Res Function(ParseError) _then) = _$ParseErrorCopyWithImpl;
 @useResult
 $Res call({
- Object message, StackTrace? stackTrace
+@RequiredObjectConverter() Object message,@StackTraceConverter() StackTrace? stackTrace
 });
 
 
@@ -438,13 +512,17 @@ as StackTrace?,
 }
 
 /// @nodoc
-
+@JsonSerializable()
 
 class CacheError implements AppError {
-  const CacheError(this.message);
-  
+  const CacheError(this.message, { String? $type}): $type = $type ?? 'cache';
+  factory CacheError.fromJson(Map<String, dynamic> json) => _$CacheErrorFromJson(json);
 
  final  String message;
+
+@JsonKey(name: 'runtimeType')
+final String $type;
+
 
 /// Create a copy of AppError
 /// with the given fields replaced by the non-null parameter values.
@@ -452,14 +530,17 @@ class CacheError implements AppError {
 @pragma('vm:prefer-inline')
 $CacheErrorCopyWith<CacheError> get copyWith => _$CacheErrorCopyWithImpl<CacheError>(this, _$identity);
 
-
+@override
+Map<String, dynamic> toJson() {
+  return _$CacheErrorToJson(this, );
+}
 
 @override
 bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is CacheError&&(identical(other.message, message) || other.message == message));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode => Object.hash(runtimeType,message);
 
@@ -504,11 +585,11 @@ as String,
 }
 
 /// @nodoc
-
+@JsonSerializable()
 
 class MultipleError implements AppError {
-  const MultipleError( List<AppError> errors): _errors = errors;
-  
+  const MultipleError( List<AppError> errors, { String? $type}): _errors = errors,$type = $type ?? 'multiple';
+  factory MultipleError.fromJson(Map<String, dynamic> json) => _$MultipleErrorFromJson(json);
 
  final  List<AppError> _errors;
  List<AppError> get errors {
@@ -518,20 +599,27 @@ class MultipleError implements AppError {
 }
 
 
+@JsonKey(name: 'runtimeType')
+final String $type;
+
+
 /// Create a copy of AppError
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $MultipleErrorCopyWith<MultipleError> get copyWith => _$MultipleErrorCopyWithImpl<MultipleError>(this, _$identity);
 
-
+@override
+Map<String, dynamic> toJson() {
+  return _$MultipleErrorToJson(this, );
+}
 
 @override
 bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is MultipleError&&const DeepCollectionEquality().equals(other._errors, _errors));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_errors));
 
@@ -576,14 +664,18 @@ as List<AppError>,
 }
 
 /// @nodoc
-
+@JsonSerializable()
 
 class UnknownError implements AppError {
-  const UnknownError(this.error, this.stackTrace);
-  
+  const UnknownError(@RequiredObjectConverter() this.error, @RequiredStackTraceConverter() this.stackTrace, { String? $type}): $type = $type ?? 'unknown';
+  factory UnknownError.fromJson(Map<String, dynamic> json) => _$UnknownErrorFromJson(json);
 
- final  Object error;
- final  StackTrace stackTrace;
+@RequiredObjectConverter() final  Object error;
+@RequiredStackTraceConverter() final  StackTrace stackTrace;
+
+@JsonKey(name: 'runtimeType')
+final String $type;
+
 
 /// Create a copy of AppError
 /// with the given fields replaced by the non-null parameter values.
@@ -591,14 +683,17 @@ class UnknownError implements AppError {
 @pragma('vm:prefer-inline')
 $UnknownErrorCopyWith<UnknownError> get copyWith => _$UnknownErrorCopyWithImpl<UnknownError>(this, _$identity);
 
-
+@override
+Map<String, dynamic> toJson() {
+  return _$UnknownErrorToJson(this, );
+}
 
 @override
 bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is UnknownError&&const DeepCollectionEquality().equals(other.error, error)&&(identical(other.stackTrace, stackTrace) || other.stackTrace == stackTrace));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(error),stackTrace);
 
@@ -615,7 +710,7 @@ abstract mixin class $UnknownErrorCopyWith<$Res> implements $AppErrorCopyWith<$R
   factory $UnknownErrorCopyWith(UnknownError value, $Res Function(UnknownError) _then) = _$UnknownErrorCopyWithImpl;
 @useResult
 $Res call({
- Object error, StackTrace stackTrace
+@RequiredObjectConverter() Object error,@RequiredStackTraceConverter() StackTrace stackTrace
 });
 
 

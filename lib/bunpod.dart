@@ -14,4 +14,5 @@ export 'common/widgets/widgets.dart';
 export 'common/theme/theme.dart';
 export 'common/extensions/extensions.dart';
 export 'common/helpers/helpers.dart';
+export 'common/database/database.dart';
 export 'app.dart';
