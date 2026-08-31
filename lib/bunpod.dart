@@ -4,6 +4,7 @@ export 'features/onboarding/onboarding.dart';
 export 'features/home/home.dart';
 export 'features/explore/explore.dart';
 export 'features/player/player.dart';
+export 'features/podcast/podcast.dart';
 export 'features/channel/channel.dart';
 export 'features/downloads/downloads.dart';
 export 'features/subscriptions/subscriptions.dart';

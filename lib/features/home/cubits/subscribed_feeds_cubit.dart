@@ -2,8 +2,13 @@ import 'package:bunpod/bunpod.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:hydrated_bloc/hydrated_bloc.dart';
 
-class PodcastFeedsCubit extends HydratedCubit<ViewState<List<PodcastFeed>>> {
-  PodcastFeedsCubit(this._repository) : super(const ViewIdle()) {
+const _debugUrls = [
+  'https://www.omnycontent.com/d/playlist/67122501-9b17-4d77-84bd-a93d00dc791e/3551f0c9-79eb-4ca9-9e0e-b38700916820/8742367b-b8c0-414a-91d9-b3c9006daddd/podcast.rss',
+  'https://feeds.megaphone.fm/TAC9650125234',
+];
+
+class SubscribedFeedsCubit extends HydratedCubit<ViewState<List<PodcastFeed>>> {
+  SubscribedFeedsCubit(this._repository) : super(const ViewIdle()) {
     refresh();
   }
 
@@ -35,7 +40,7 @@ class PodcastFeedsCubit extends HydratedCubit<ViewState<List<PodcastFeed>>> {
 
   TaskEither<AppError, List<PodcastFeed>> get _fetchFeeds {
     return TaskEither<AppError, List<PodcastFeed>>.tryCatch(
-      () => _repository.fetchFeeds().then(
+      () => _repository.fetchFeeds(_debugUrls).then(
         (e) => e.fold((l) => throw l, (r) => r),
       ),
       (error, _) =>

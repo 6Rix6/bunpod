@@ -6,14 +6,9 @@ import 'package:fpdart/fpdart.dart';
 import 'package:pool/pool.dart';
 
 abstract interface class PodcastFeedRepository {
-  Future<AppEither<List<PodcastFeed>>> fetchFeeds();
+  Future<AppEither<List<PodcastFeed>>> fetchFeeds(List<String> urls);
   FutureOr<void> close();
 }
-
-const _debugUrls = [
-  'https://www.omnycontent.com/d/playlist/67122501-9b17-4d77-84bd-a93d00dc791e/3551f0c9-79eb-4ca9-9e0e-b38700916820/8742367b-b8c0-414a-91d9-b3c9006daddd/podcast.rss',
-  'https://feeds.megaphone.fm/TAC9650125234',
-];
 
 class PodcastFeedRepositoryImpl implements PodcastFeedRepository {
   PodcastFeedRepositoryImpl(this._datasource);
@@ -23,22 +18,22 @@ class PodcastFeedRepositoryImpl implements PodcastFeedRepository {
   final Pool _pool = Pool(4);
 
   @override
-  Future<AppEither<List<PodcastFeed>>> fetchFeeds() async {
-    final futures = _debugUrls.map(
+  Future<AppEither<List<PodcastFeed>>> fetchFeeds(List<String> urls) async {
+    final futures = urls.map(
       (url) => _pool.withResource(() => _datasource.getFeed(url)),
     );
     final results = await Future.wait(futures);
 
-    final rssFeeds = <RSSPodcastFeed>[];
+    final rssFeeds = <(String, RSSPodcastFeed)>[];
     final errors = <AppError>[];
 
-    for (final result in results) {
-      result.match(
+    for (var i = 0; i < urls.length; i++) {
+      results[i].match(
         (e) {
           logarte.log('failed to fetch feed: $e');
           errors.add(e);
         },
-        rssFeeds.add,
+        (rss) => rssFeeds.add((urls[i], rss)),
       );
     }
 
@@ -47,8 +42,8 @@ class PodcastFeedRepositoryImpl implements PodcastFeedRepository {
     }
 
     final feeds = <PodcastFeed>[];
-    for (final rss in rssFeeds) {
-      final feed = await rss.toPodcastFeed();
+    for (final (url, rss) in rssFeeds) {
+      final feed = await rss.toPodcastFeed(url);
       if (feed == null) {
         logarte.log('failed to convert RSSPodcastFeed: ${rss.url}');
         continue;

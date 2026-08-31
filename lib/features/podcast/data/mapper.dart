@@ -3,7 +3,7 @@ import 'package:bunpod/bunpod.dart';
 import 'package:flutter/material.dart';
 
 extension PodcastFeedMapper on RSSPodcastFeed {
-  Future<PodcastFeed?> toPodcastFeed() async {
+  Future<PodcastFeed?> toPodcastFeed(String url) async {
     if (imageUrl == null) return null;
 
     final seed =
@@ -19,7 +19,7 @@ extension PodcastFeedMapper on RSSPodcastFeed {
         .whereType<Episode>()
         .toList();
 
-    return PodcastFeed(channel: channel, episodes: eps);
+    return PodcastFeed(url: url, channel: channel, episodes: eps);
   }
 
   Channel? toChannel({

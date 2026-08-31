@@ -1,23 +1,53 @@
-import 'dart:async';
-
 import 'package:bunpod/bunpod.dart';
+import 'package:expressive_loading_indicator/expressive_loading_indicator.dart';
 import 'package:expressive_refresh_indicator/expressive_refresh_indicator.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
+import 'package:expressive_snack/expressive_snack.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-class HomePage extends StatefulWidget {
+class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  Widget build(BuildContext context) {
+    final ColorScheme cs = Theme.of(context).colorScheme;
+
+    return Scaffold(
+      backgroundColor: cs.surface,
+      appBar: const HomeAppBar(),
+      body: BlocBuilder<SubscribedFeedsCubit, ViewState<List<PodcastFeed>>>(
+        builder: (context, state) => switch (state) {
+          _ when state.dataOrNull != null => HomePageLoaded(
+            feeds: state.dataOrNull!,
+          ),
+          ViewFailed(:final error) => Center(
+            child: Text(error?.toString() ?? 'An error occurred.'),
+          ),
+          _ => Center(
+            child: LoadingIndicator(),
+          ),
+        },
+      ),
+    );
+  }
 }
 
-class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
-  /// The episode the player currently holds; null before anything loads.
+class HomePageLoaded extends StatefulWidget {
+  const HomePageLoaded({super.key, required this.feeds});
 
-  late final List<String?> _tabValues = _buildTabValues();
+  final List<PodcastFeed> feeds;
+
+  @override
+  State<HomePageLoaded> createState() => _HomePageLoadedState();
+}
+
+class _HomePageLoadedState extends State<HomePageLoaded>
+    with SingleTickerProviderStateMixin {
+  late final List<FilterTab> tabs = _buildFilterTabs(context);
+  String? _channel;
+
+  List<String?> get _tabValues => tabs.map((tab) => tab.value).toList();
 
   late final TabController _tabController = TabController(
     length: _tabValues.length,
@@ -25,23 +55,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     animationDuration: const Duration(milliseconds: 220),
   );
 
-  String? _channel;
-
-  void _openPlayer(Episode episode) {
-    Navigator.of(context).push(PlayerPage.route(episode));
-  }
-
   @override
   void initState() {
     super.initState();
     _tabController.animation!.addListener(_syncChannelToTab);
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      logarte.attach(
-        context: context,
-        visible: kDebugMode,
-      );
-    });
   }
 
   @override
@@ -50,30 +67,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     super.dispose();
   }
 
-  // Mock-only: holds the expressive indicator for a beat; a real feed fetch
-  // goes here later.
-  Future<void> _refresh() {
-    return Future<void>.delayed(const Duration(milliseconds: 1500));
-  }
-
-  static List<String?> _buildTabValues() {
-    final Set<String> seen = <String>{};
-    final List<String?> values = <String?>[null];
-    for (final Episode e in mockEpisodes) {
-      if (seen.add(e.channel)) values.add(e.channel);
-    }
-    return values;
-  }
-
   void _syncChannelToTab() {
     final String? value = _tabValues[_tabController.animation!.value.round()];
     if (value != _channel) setState(() => _channel = value);
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final ColorScheme cs = Theme.of(context).colorScheme;
-
+  List<FilterTab> _buildFilterTabs(BuildContext context) {
     final List<FilterTab> tabs = <FilterTab>[
       FilterTab(
         value: null,
@@ -82,130 +81,136 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       ),
     ];
 
-    for (final String? value in _tabValues) {
-      if (value == null) continue;
-      final Episode e = mockEpisodes.firstWhere((e) => e.channel == value);
+    for (final feed in widget.feeds) {
+      final Channel channel = feed.channel;
+
+      final String value = channel.name;
+      final String label = value.length > 10
+          ? '${value.substring(0, 10)}...'
+          : value;
 
       tabs.add(
         FilterTab(
-          value: e.channel,
-          label: e.channel,
-          seed: e.seed,
-          image: e.image,
+          value: value,
+          label: label,
+          seed: channel.seed,
+          image: channel.image,
           shape: ShapeValues.coverFocused,
         ),
       );
     }
 
-    return Scaffold(
-      backgroundColor: cs.surface,
-      appBar: HomeAppBar(),
-      body: ExpressiveRefreshIndicator(
-        onRefresh: _refresh,
-        // Inside NestedScrollView the drag comes from the inner scrollables
-        // (outer -> TabBarView page -> list = depth 2), so the default
-        // depth-0 predicate would never trigger.
-        notificationPredicate: (notification) => notification.depth == 2,
-        child: NestedScrollView(
-          scrollBehavior: const CupertinoScrollBehavior(),
-          headerSliverBuilder: (context, innerScrolled) {
-            return [
-              SliverToBoxAdapter(
-                child: BlocBuilder<PlayerCubit, PlayerState>(
-                  builder: (context, state) {
-                    if (state.episode == null) {
-                      return SizedBox.shrink();
-                    }
+    return tabs;
+  }
 
-                    final bool live = state.duration > Duration.zero;
-                    final Episode current = state.episode!;
+  Future<void> _refresh() async {
+    await context.read<SubscribedFeedsCubit>().refresh(
+      onError: (error) =>
+          showExpressiveSnack(context: context, message: error.toString()),
+    );
+  }
 
-                    final double progress = live
-                        ? state.progress
-                        : current.progress;
+  void _openPlayer(Episode episode) {
+    Navigator.of(context).push(PlayerPage.route(episode));
+  }
 
-                    final Duration timeLeft = live
-                        ? state.remaining
-                        : current.total - current.listened;
+  PodcastFeed? _feedForChannelName(String name) {
+    try {
+      return widget.feeds.firstWhere((f) => f.channel.name == name);
+    } catch (_) {
+      return null;
+    }
+  }
 
-                    return Column(
-                      children: [
-                        24.gap,
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: GestureDetector(
-                            onTap: () => _openPlayer(current),
-                            child: HomePlayerCard(
-                              scheme: current.scheme(context),
-                              imageUrl: current.image,
-                              channel: current.channel,
-                              title: current.title,
-                              progress: progress,
-                              timeLeft: timeLeft,
-                              playing: state.playing,
-                              coverShape: ShapeValues.coverFocused,
-                              onPlayPause: () =>
-                                  context.read<PlayerCubit>().toggle(),
-                            ),
-                          ),
-                        ),
-                        32.gap,
-                      ],
-                    );
-                  },
+  Widget _buildHomePlayer() {
+    return BlocBuilder<PlayerCubit, PlayerState>(
+      builder: (context, state) {
+        if (state.episode == null) {
+          return SizedBox.shrink();
+        }
+
+        final bool live = state.duration > Duration.zero;
+        final Episode current = state.episode!;
+
+        final double progress = live ? state.progress : current.progress;
+
+        final Duration timeLeft = live
+            ? state.remaining
+            : current.total - current.listened;
+
+        return Column(
+          children: [
+            24.gap,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: GestureDetector(
+                onTap: () => _openPlayer(current),
+                child: HomePlayerCard(
+                  scheme: current.scheme(context),
+                  imageUrl: current.image,
+                  channel: current.channel,
+                  title: current.title,
+                  progress: progress,
+                  timeLeft: timeLeft,
+                  playing: state.playing,
+                  coverShape: ShapeValues.coverFocused,
+                  onPlayPause: () => context.read<PlayerCubit>().toggle(),
                 ),
               ),
-              SliverOverlapAbsorber(
-                handle: NestedScrollView.sliverOverlapAbsorberHandleFor(
-                  context,
-                ),
-                sliver: SliverPersistentHeader(
-                  pinned: true,
-                  delegate: _PinnedTabsDelegate(
-                    height: 64,
-                    child: Center(
-                      child: FilterTabs(
-                        tabs: tabs,
-                        selected: _channel,
-                        onSelected: (value) {
-                          // Tapping the already-selected channel a second time
-                          // opens its channel page (the "All" tab is exempt).
-                          if (value != null && value == _channel) {
-                            final Channel? channel = channelByName(value);
-                            if (channel != null) {
-                              Navigator.of(
-                                context,
-                              ).push(ChannelPage.route(channel));
-                            }
-                            return;
-                          }
-                          final int i = _tabValues.indexOf(value);
-                          if (i != -1) _tabController.animateTo(i);
-                        },
-                      ),
+            ),
+            32.gap,
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildTabs(BuildContext context) {
+    return SliverPersistentHeader(
+      pinned: true,
+      delegate: _PinnedTabsDelegate(
+        height: 64,
+        child: Center(
+          child: FilterTabs(
+            tabs: tabs,
+            selected: _channel,
+            onSelected: (value) {
+              // Tapping the already-selected channel a second time
+              // opens its channel page (the "All" tab is exempt).
+              if (value != null && value == _channel) {
+                final PodcastFeed? feed = _feedForChannelName(value);
+
+                if (feed != null) {
+                  Navigator.of(
+                    context,
+                  ).push(
+                    ChannelPage.route(
+                      feed.url,
+                      channel: feed.channel,
+                      episodes: feed.episodes,
                     ),
-                  ),
-                ),
-              ),
-            ];
-          },
-          body: TabBarView(
-            controller: _tabController,
-            physics: const SpringPagePhysics(),
-            children: [
-              for (final value in _tabValues)
-                Builder(builder: (context) => _buildPage(context, value)),
-            ],
+                  );
+                }
+                return;
+              }
+              final int i = _tabValues.indexOf(value);
+              if (i != -1) _tabController.animateTo(i);
+            },
           ),
         ),
       ),
     );
   }
 
-  Widget _buildPage(BuildContext context, String? channel) {
-    final List<Episode> visible = channel == null
-        ? mockEpisodes
-        : mockEpisodes.where((e) => e.channel == channel).toList();
+  Widget _buildPage(BuildContext context, String? channelName) {
+    final List<Episode> visible = channelName == null
+        ? widget.feeds
+              .map((feed) => feed.episodes)
+              .expand((eps) => eps)
+              .toList()
+        : widget.feeds
+              .firstWhere((feed) => feed.channel.name == channelName)
+              .episodes;
 
     final List<Widget> children = <Widget>[];
     bool first = true;
@@ -230,7 +235,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               selector: (state) => state.episode,
               builder: (context, current) => EpisodeCard(
                 episode: ep,
-                playing: identical(ep, current),
+                playing: ep == current,
                 onTap: () => _openPlayer(ep),
               ),
             ),
@@ -240,7 +245,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     }
 
     return CustomScrollView(
-      key: PageStorageKey(channel ?? '__all__'),
+      key: PageStorageKey(channelName ?? '__all__'),
       slivers: [
         SliverOverlapInjector(
           handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
@@ -250,6 +255,39 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           sliver: SliverList(delegate: SliverChildListDelegate(children)),
         ),
       ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ExpressiveRefreshIndicator(
+      onRefresh: _refresh,
+      // Inside NestedScrollView the drag comes from the inner scrollables
+      // (outer -> TabBarView page -> list = depth 2), so the default
+      // depth-0 predicate would never trigger.
+      notificationPredicate: (notification) => notification.depth == 2,
+      child: NestedScrollView(
+        scrollBehavior: const CupertinoScrollBehavior(),
+        headerSliverBuilder: (context, innerScrolled) {
+          return [
+            SliverToBoxAdapter(child: _buildHomePlayer()),
+            SliverOverlapAbsorber(
+              handle: NestedScrollView.sliverOverlapAbsorberHandleFor(
+                context,
+              ),
+              sliver: _buildTabs(context),
+            ),
+          ];
+        },
+        body: TabBarView(
+          controller: _tabController,
+          physics: const SpringPagePhysics(),
+          children: [
+            for (final value in _tabValues)
+              Builder(builder: (context) => _buildPage(context, value)),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -16,7 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$PodcastFeed {
 
- Channel get channel; List<Episode> get episodes;
+ String get url; Channel get channel; List<Episode> get episodes;
 /// Create a copy of PodcastFeed
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -29,16 +29,16 @@ $PodcastFeedCopyWith<PodcastFeed> get copyWith => _$PodcastFeedCopyWithImpl<Podc
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PodcastFeed&&(identical(other.channel, channel) || other.channel == channel)&&const DeepCollectionEquality().equals(other.episodes, episodes));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PodcastFeed&&(identical(other.url, url) || other.url == url)&&(identical(other.channel, channel) || other.channel == channel)&&const DeepCollectionEquality().equals(other.episodes, episodes));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,channel,const DeepCollectionEquality().hash(episodes));
+int get hashCode => Object.hash(runtimeType,url,channel,const DeepCollectionEquality().hash(episodes));
 
 @override
 String toString() {
-  return 'PodcastFeed(channel: $channel, episodes: $episodes)';
+  return 'PodcastFeed(url: $url, channel: $channel, episodes: $episodes)';
 }
 
 
@@ -49,7 +49,7 @@ abstract mixin class $PodcastFeedCopyWith<$Res>  {
   factory $PodcastFeedCopyWith(PodcastFeed value, $Res Function(PodcastFeed) _then) = _$PodcastFeedCopyWithImpl;
 @useResult
 $Res call({
- Channel channel, List<Episode> episodes
+ String url, Channel channel, List<Episode> episodes
 });
 
 
@@ -66,9 +66,10 @@ class _$PodcastFeedCopyWithImpl<$Res>
 
 /// Create a copy of PodcastFeed
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? channel = null,Object? episodes = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? url = null,Object? channel = null,Object? episodes = null,}) {
   return _then(PodcastFeed(
-channel: null == channel ? _self.channel : channel // ignore: cast_nullable_to_non_nullable
+url: null == url ? _self.url : url // ignore: cast_nullable_to_non_nullable
+as String,channel: null == channel ? _self.channel : channel // ignore: cast_nullable_to_non_nullable
 as Channel,episodes: null == episodes ? _self.episodes : episodes // ignore: cast_nullable_to_non_nullable
 as List<Episode>,
   ));
@@ -161,10 +162,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Channel channel,  List<Episode> episodes)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String url,  Channel channel,  List<Episode> episodes)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PodcastFeed() when $default != null:
-return $default(_that.channel,_that.episodes);case _:
+return $default(_that.url,_that.channel,_that.episodes);case _:
   return orElse();
 
 }
@@ -182,10 +183,10 @@ return $default(_that.channel,_that.episodes);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Channel channel,  List<Episode> episodes)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String url,  Channel channel,  List<Episode> episodes)  $default,) {final _that = this;
 switch (_that) {
 case _PodcastFeed():
-return $default(_that.channel,_that.episodes);}
+return $default(_that.url,_that.channel,_that.episodes);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -199,10 +200,10 @@ return $default(_that.channel,_that.episodes);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Channel channel,  List<Episode> episodes)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String url,  Channel channel,  List<Episode> episodes)?  $default,) {final _that = this;
 switch (_that) {
 case _PodcastFeed() when $default != null:
-return $default(_that.channel,_that.episodes);case _:
+return $default(_that.url,_that.channel,_that.episodes);case _:
   return null;
 
 }
@@ -214,9 +215,10 @@ return $default(_that.channel,_that.episodes);case _:
 @JsonSerializable()
 
 class _PodcastFeed implements PodcastFeed {
-  const _PodcastFeed({required this.channel, required  List<Episode> episodes}): _episodes = episodes;
+  const _PodcastFeed({required this.url, required this.channel, required  List<Episode> episodes}): _episodes = episodes;
   factory _PodcastFeed.fromJson(Map<String, dynamic> json) => _$PodcastFeedFromJson(json);
 
+@override final  String url;
 @override final  Channel channel;
  final  List<Episode> _episodes;
 @override List<Episode> get episodes {
@@ -239,16 +241,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PodcastFeed&&(identical(other.channel, channel) || other.channel == channel)&&const DeepCollectionEquality().equals(other._episodes, _episodes));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PodcastFeed&&(identical(other.url, url) || other.url == url)&&(identical(other.channel, channel) || other.channel == channel)&&const DeepCollectionEquality().equals(other._episodes, _episodes));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,channel,const DeepCollectionEquality().hash(_episodes));
+int get hashCode => Object.hash(runtimeType,url,channel,const DeepCollectionEquality().hash(_episodes));
 
 @override
 String toString() {
-  return 'PodcastFeed(channel: $channel, episodes: $episodes)';
+  return 'PodcastFeed(url: $url, channel: $channel, episodes: $episodes)';
 }
 
 
@@ -259,7 +261,7 @@ abstract mixin class _$PodcastFeedCopyWith<$Res> implements $PodcastFeedCopyWith
   factory _$PodcastFeedCopyWith(_PodcastFeed value, $Res Function(_PodcastFeed) _then) = __$PodcastFeedCopyWithImpl;
 @override @useResult
 $Res call({
- Channel channel, List<Episode> episodes
+ String url, Channel channel, List<Episode> episodes
 });
 
 
@@ -276,9 +278,10 @@ class __$PodcastFeedCopyWithImpl<$Res>
 
 /// Create a copy of PodcastFeed
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? channel = null,Object? episodes = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? url = null,Object? channel = null,Object? episodes = null,}) {
   return _then(_PodcastFeed(
-channel: null == channel ? _self.channel : channel // ignore: cast_nullable_to_non_nullable
+url: null == url ? _self.url : url // ignore: cast_nullable_to_non_nullable
+as String,channel: null == channel ? _self.channel : channel // ignore: cast_nullable_to_non_nullable
 as Channel,episodes: null == episodes ? _self._episodes : episodes // ignore: cast_nullable_to_non_nullable
 as List<Episode>,
   ));

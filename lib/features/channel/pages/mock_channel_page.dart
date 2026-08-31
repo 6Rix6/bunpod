@@ -1,5 +1,4 @@
 import 'package:bunpod/bunpod.dart';
-import 'package:expressive_loading_indicator/expressive_loading_indicator.dart';
 import 'package:expressive_refresh_indicator/expressive_refresh_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -10,83 +9,22 @@ import 'package:motor/motor.dart';
 const double _kCoverSize = 168;
 const double _kSubscribeHeight = 58;
 
-class ChannelPage extends StatelessWidget {
-  const ChannelPage({
-    super.key,
-    required this.feedUrl,
-    this.episodes,
-    this.channel,
-  });
+class MockChannelPage extends StatefulWidget {
+  const MockChannelPage({super.key, required this.channel});
 
-  final String feedUrl;
-  final List<Episode>? episodes;
-  final Channel? channel;
-
-  static Route<void> route(
-    String feedUrl, {
-    List<Episode>? episodes,
-    Channel? channel,
-  }) {
-    return MaterialPageRoute<void>(
-      builder: (context) =>
-          ChannelPage(feedUrl: feedUrl, episodes: episodes, channel: channel),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => PodcastFeedCubit(locator(), url: feedUrl),
-      // TODO: show snackbar when state is ViewFailed
-      child: BlocBuilder<PodcastFeedCubit, ViewState<PodcastFeed>>(
-        builder: (context, state) => switch (state) {
-          _ when state.dataOrNull != null => _ChannelPageLoaded(
-            episodes: state.dataOrNull!.episodes,
-            channel: state.dataOrNull!.channel,
-          ),
-          ViewFailed(:final error) => _buildWrapper(
-            context,
-            Center(
-              child: Text(error?.toString() ?? 'An error occurred.'),
-            ),
-          ),
-          _ => _buildWrapper(
-            context,
-            Center(
-              child: LoadingIndicator(),
-            ),
-          ),
-        },
-      ),
-    );
-  }
-
-  Widget _buildWrapper(BuildContext context, Widget body) {
-    final ColorScheme cs = Theme.of(context).colorScheme;
-
-    if (channel != null && episodes != null) {
-      return _ChannelPageLoaded(episodes: episodes!, channel: channel!);
-    }
-
-    return Scaffold(
-      backgroundColor: cs.surface,
-      appBar: AppBar(),
-      body: body,
-    );
-  }
-}
-
-class _ChannelPageLoaded extends StatefulWidget {
-  const _ChannelPageLoaded({required this.episodes, required this.channel});
-
-  final List<Episode> episodes;
   final Channel channel;
 
+  static Route<void> route(Channel channel) {
+    return MaterialPageRoute<void>(
+      builder: (context) => MockChannelPage(channel: channel),
+    );
+  }
+
   @override
-  State<_ChannelPageLoaded> createState() => _ChannelPageLoadedState();
+  State<MockChannelPage> createState() => _MockChannelPageState();
 }
 
-class _ChannelPageLoadedState extends State<_ChannelPageLoaded> {
+class _MockChannelPageState extends State<MockChannelPage> {
   // Drives the hero cover's spring entrance once the first frame is laid out.
   bool _entered = false;
   // Subscriptions are mock-only — every catalog channel starts subscribed.
@@ -112,7 +50,7 @@ class _ChannelPageLoadedState extends State<_ChannelPageLoaded> {
     final ColorScheme cs = channel.scheme(context);
     final TextTheme tt = Theme.of(context).textTheme;
 
-    final List<Episode> episodes = widget.episodes;
+    final List<Episode> episodes = channel.episodes;
 
     // The header collapses from a full hero down to a plain back-button bar, so
     // measure the channel name to know exactly how tall the expanded state is.
@@ -521,3 +459,4 @@ class _SubscribeButtonState extends State<_SubscribeButton> {
     );
   }
 }
+

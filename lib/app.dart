@@ -1,4 +1,5 @@
 import 'package:bunpod/bunpod.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -7,12 +8,16 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (!logarte.isOverlayAttached) {
+      logarte.attach(context: context, visible: kDebugMode);
+    }
+
     return MultiBlocProvider(
       providers: [
         BlocProvider.value(value: locator<ThemeModeCubit>()),
         BlocProvider.value(value: locator<PlayerCubit>()),
-        BlocProvider<PodcastFeedsCubit>(
-          create: (_) => locator<PodcastFeedsCubit>(),
+        BlocProvider<SubscribedFeedsCubit>(
+          create: (_) => locator(),
         ),
       ],
       child: BlocBuilder<ThemeModeCubit, ThemeMode>(

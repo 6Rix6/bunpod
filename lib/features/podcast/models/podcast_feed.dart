@@ -7,6 +7,7 @@ part 'podcast_feed.g.dart';
 @freezed
 sealed class PodcastFeed with _$PodcastFeed {
   const factory PodcastFeed({
+    required String url,
     required Channel channel,
     required List<Episode> episodes,
   }) = _PodcastFeed;

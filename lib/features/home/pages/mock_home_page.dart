@@ -1,0 +1,293 @@
+import 'dart:async';
+
+import 'package:bunpod/bunpod.dart';
+import 'package:expressive_refresh_indicator/expressive_refresh_indicator.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+class MockHomePage extends StatefulWidget {
+  const MockHomePage({super.key});
+
+  @override
+  State<MockHomePage> createState() => _MockHomePageState();
+}
+
+class _MockHomePageState extends State<MockHomePage> with TickerProviderStateMixin {
+  /// The episode the player currently holds; null before anything loads.
+
+  late final List<String?> _tabValues = _buildTabValues();
+
+  late final TabController _tabController = TabController(
+    length: _tabValues.length,
+    vsync: this,
+    animationDuration: const Duration(milliseconds: 220),
+  );
+
+  String? _channel;
+
+  void _openPlayer(Episode episode) {
+    Navigator.of(context).push(PlayerPage.route(episode));
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController.animation!.addListener(_syncChannelToTab);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      logarte.attach(
+        context: context,
+        visible: kDebugMode,
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  // Mock-only: holds the expressive indicator for a beat; a real feed fetch
+  // goes here later.
+  Future<void> _refresh() {
+    return Future<void>.delayed(const Duration(milliseconds: 1500));
+  }
+
+  static List<String?> _buildTabValues() {
+    final Set<String> seen = <String>{};
+    final List<String?> values = <String?>[null];
+    for (final Episode e in mockEpisodes) {
+      if (seen.add(e.channel)) values.add(e.channel);
+    }
+    return values;
+  }
+
+  void _syncChannelToTab() {
+    final String? value = _tabValues[_tabController.animation!.value.round()];
+    if (value != _channel) setState(() => _channel = value);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ColorScheme cs = Theme.of(context).colorScheme;
+
+    final List<FilterTab> tabs = <FilterTab>[
+      FilterTab(
+        value: null,
+        label: 'All',
+        icon: Icons.grid_view_rounded,
+      ),
+    ];
+
+    for (final String? value in _tabValues) {
+      if (value == null) continue;
+      final Episode e = mockEpisodes.firstWhere((e) => e.channel == value);
+
+      tabs.add(
+        FilterTab(
+          value: e.channel,
+          label: e.channel,
+          seed: e.seed,
+          image: e.image,
+          shape: ShapeValues.coverFocused,
+        ),
+      );
+    }
+
+    return Scaffold(
+      backgroundColor: cs.surface,
+      appBar: HomeAppBar(),
+      body: ExpressiveRefreshIndicator(
+        onRefresh: _refresh,
+        // Inside NestedScrollView the drag comes from the inner scrollables
+        // (outer -> TabBarView page -> list = depth 2), so the default
+        // depth-0 predicate would never trigger.
+        notificationPredicate: (notification) => notification.depth == 2,
+        child: NestedScrollView(
+          scrollBehavior: const CupertinoScrollBehavior(),
+          headerSliverBuilder: (context, innerScrolled) {
+            return [
+              SliverToBoxAdapter(
+                child: BlocBuilder<PlayerCubit, PlayerState>(
+                  builder: (context, state) {
+                    if (state.episode == null) {
+                      return SizedBox.shrink();
+                    }
+
+                    final bool live = state.duration > Duration.zero;
+                    final Episode current = state.episode!;
+
+                    final double progress = live
+                        ? state.progress
+                        : current.progress;
+
+                    final Duration timeLeft = live
+                        ? state.remaining
+                        : current.total - current.listened;
+
+                    return Column(
+                      children: [
+                        24.gap,
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: GestureDetector(
+                            onTap: () => _openPlayer(current),
+                            child: HomePlayerCard(
+                              scheme: current.scheme(context),
+                              imageUrl: current.image,
+                              channel: current.channel,
+                              title: current.title,
+                              progress: progress,
+                              timeLeft: timeLeft,
+                              playing: state.playing,
+                              coverShape: ShapeValues.coverFocused,
+                              onPlayPause: () =>
+                                  context.read<PlayerCubit>().toggle(),
+                            ),
+                          ),
+                        ),
+                        32.gap,
+                      ],
+                    );
+                  },
+                ),
+              ),
+              SliverOverlapAbsorber(
+                handle: NestedScrollView.sliverOverlapAbsorberHandleFor(
+                  context,
+                ),
+                sliver: SliverPersistentHeader(
+                  pinned: true,
+                  delegate: _PinnedTabsDelegate(
+                    height: 64,
+                    child: Center(
+                      child: FilterTabs(
+                        tabs: tabs,
+                        selected: _channel,
+                        onSelected: (value) {
+                          // Tapping the already-selected channel a second time
+                          // opens its channel page (the "All" tab is exempt).
+                          if (value != null && value == _channel) {
+                            final Channel? channel = channelByName(value);
+                            if (channel != null) {
+                              Navigator.of(
+                                context,
+                              ).push(MockChannelPage.route(channel));
+                            }
+                            return;
+                          }
+                          final int i = _tabValues.indexOf(value);
+                          if (i != -1) _tabController.animateTo(i);
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ];
+          },
+          body: TabBarView(
+            controller: _tabController,
+            physics: const SpringPagePhysics(),
+            children: [
+              for (final value in _tabValues)
+                Builder(builder: (context) => _buildPage(context, value)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPage(BuildContext context, String? channel) {
+    final List<Episode> visible = channel == null
+        ? mockEpisodes
+        : mockEpisodes.where((e) => e.channel == channel).toList();
+
+    final List<Widget> children = <Widget>[];
+    bool first = true;
+    for (final Bucket bucket in Bucket.values) {
+      final List<Episode> eps = visible
+          .where((e) => e.bucket == bucket)
+          .toList();
+      if (eps.isEmpty) continue;
+      children.add(
+        SectionHeader(
+          label: _bucketLabels[bucket]!,
+          count: eps.length,
+          topPadding: first ? 16 : 32,
+        ),
+      );
+      first = false;
+      for (final Episode ep in eps) {
+        children.add(
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: BlocSelector<PlayerCubit, PlayerState, Episode?>(
+              selector: (state) => state.episode,
+              builder: (context, current) => EpisodeCard(
+                episode: ep,
+                playing: identical(ep, current),
+                onTap: () => _openPlayer(ep),
+              ),
+            ),
+          ),
+        );
+      }
+    }
+
+    return CustomScrollView(
+      key: PageStorageKey(channel ?? '__all__'),
+      slivers: [
+        SliverOverlapInjector(
+          handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
+        ),
+        SliverPadding(
+          padding: const EdgeInsets.only(bottom: 32),
+          sliver: SliverList(delegate: SliverChildListDelegate(children)),
+        ),
+      ],
+    );
+  }
+}
+
+const _bucketLabels = <Bucket, String>{
+  Bucket.today: 'Today',
+  Bucket.yesterday: 'Yesterday',
+  Bucket.thisWeek: 'This Week',
+  Bucket.thisMonth: 'This Month',
+  Bucket.earlier: 'Earlier',
+};
+
+class _PinnedTabsDelegate extends SliverPersistentHeaderDelegate {
+  final Widget child;
+  final double height;
+
+  _PinnedTabsDelegate({
+    required this.child,
+    required this.height,
+  });
+
+  @override
+  double get minExtent => height;
+
+  @override
+  double get maxExtent => height;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return SizedBox.expand(child: child);
+  }
+
+  @override
+  bool shouldRebuild(covariant _PinnedTabsDelegate old) {
+    return old.child != child || old.height != height;
+  }
+}

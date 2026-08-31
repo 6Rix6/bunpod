@@ -10,20 +10,17 @@ import 'package:fpdart/fpdart.dart';
 
 abstract interface class RSSPodcastDataSource {
   Future<AppEither<RSSPodcastFeed>> getFeed(String url);
-  FutureOr<void> close();
 }
 
 class RSSPodcastDataSourceImpl implements RSSPodcastDataSource {
-  RSSPodcastDataSourceImpl();
-  final RSSFeedClient _client = RSSFeedClient(
-    httpClient: Dio(
-      BaseOptions(
-        validateStatus: (status) =>
-            status != null && (status >= 200 && status < 300 || status == 304),
-      ),
-    ),
+  RSSPodcastDataSourceImpl(this._client, this._feedDao);
+  final RSSFeedClient _client;
+  final FeedDao _feedDao;
+
+  static BaseOptions get baseOptions => BaseOptions(
+    validateStatus: (status) =>
+        status != null && (status >= 200 && status < 300 || status == 304),
   );
-  final FeedDao _feedDao = locator<FeedDao>();
 
   @override
   Future<AppEither<RSSPodcastFeed>> getFeed(String url) async {
@@ -203,11 +200,6 @@ class RSSPodcastDataSourceImpl implements RSSPodcastDataSource {
       duration: Duration(seconds: row.totalSeconds),
       imageUrl: row.imageUrl,
     );
-  }
-
-  @override
-  FutureOr<void> close() {
-    _client.close();
   }
 }
 

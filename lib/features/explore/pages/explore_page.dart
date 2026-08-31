@@ -55,7 +55,7 @@ class _ExplorePageState extends State<ExplorePage> {
   }
 
   void _openChannel(Channel channel) {
-    Navigator.of(context).push(ChannelPage.route(channel));
+    Navigator.of(context).push(MockChannelPage.route(channel));
   }
 
   /// Channels matching the active shelf and/or query. A query matches a
