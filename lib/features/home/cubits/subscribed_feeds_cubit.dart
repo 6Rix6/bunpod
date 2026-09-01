@@ -5,6 +5,7 @@ import 'package:hydrated_bloc/hydrated_bloc.dart';
 const _debugUrls = [
   'https://www.omnycontent.com/d/playlist/67122501-9b17-4d77-84bd-a93d00dc791e/3551f0c9-79eb-4ca9-9e0e-b38700916820/8742367b-b8c0-414a-91d9-b3c9006daddd/podcast.rss',
   'https://feeds.megaphone.fm/TAC9650125234',
+  'https://anchor.fm/s/1035e1308/podcast/rss',
 ];
 
 class SubscribedFeedsCubit extends HydratedCubit<ViewState<List<PodcastFeed>>> {
@@ -21,7 +22,9 @@ class SubscribedFeedsCubit extends HydratedCubit<ViewState<List<PodcastFeed>>> {
 
     final nextState = await ViewState.guard(_fetchFeeds);
 
-    emit(nextState);
+    if (!isClosed) {
+      emit(nextState);
+    }
   }
 
   Future<void> refresh({void Function(Object error)? onError}) async {
@@ -35,14 +38,18 @@ class SubscribedFeedsCubit extends HydratedCubit<ViewState<List<PodcastFeed>>> {
       onError: onError,
     );
 
-    emit(previousState.copyWithPrevious(nextState));
+    if (!isClosed) {
+      emit(previousState.copyWithPrevious(nextState));
+    }
   }
 
   TaskEither<AppError, List<PodcastFeed>> get _fetchFeeds {
     return TaskEither<AppError, List<PodcastFeed>>.tryCatch(
-      () => _repository.fetchFeeds(_debugUrls).then(
-        (e) => e.fold((l) => throw l, (r) => r),
-      ),
+      () => _repository
+          .fetchFeeds(_debugUrls)
+          .then(
+            (e) => e.fold((l) => throw l, (r) => r),
+          ),
       (error, _) =>
           error is AppError ? error : UnknownError(error, StackTrace.current),
     );

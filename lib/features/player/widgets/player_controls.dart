@@ -1,3 +1,4 @@
+import 'package:audio_service/audio_service.dart';
 import 'package:bunpod/bunpod.dart';
 import 'package:flutter/material.dart';
 
@@ -6,6 +7,7 @@ class PlayerControls extends StatelessWidget {
     super.key,
     required this.scheme,
     required this.playing,
+    required this.processing,
     required this.fav,
     required this.onPlayPause,
     required this.onFav,
@@ -13,6 +15,7 @@ class PlayerControls extends StatelessWidget {
 
   final ColorScheme scheme;
   final bool playing;
+  final AudioProcessingState processing;
   final bool fav;
   final VoidCallback onPlayPause;
   final VoidCallback onFav;
@@ -40,8 +43,9 @@ class PlayerControls extends StatelessWidget {
                 height: heroSide,
                 child: PlayButton(
                   playing: playing,
-                  color: cs.onSurface,
-                  foreground: cs.surface,
+                  processing: processing,
+                  color: cs.inverseSurface,
+                  foreground: cs.onInverseSurface,
                   onTap: onPlayPause,
                 ),
               ),

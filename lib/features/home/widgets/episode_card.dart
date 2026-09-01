@@ -119,7 +119,13 @@ class _EpisodeCardState extends State<EpisodeCard>
     );
   }
 
-  Widget _trailing(BuildContext context, ColorScheme cs, Color fg) {
+  Widget _trailing(
+    BuildContext context,
+    ColorScheme cs,
+    Color fg,
+    Duration total,
+    Duration listened,
+  ) {
     final Episode episode = widget.episode;
 
     if (episode.progress >= 1.0) {
@@ -140,8 +146,8 @@ class _EpisodeCardState extends State<EpisodeCard>
       );
     }
 
-    final bool started = episode.listened > Duration.zero;
-    final Duration remaining = episode.total - episode.listened;
+    final bool started = listened > Duration.zero;
+    final Duration remaining = total - listened;
 
     return Text(
       started ? '-${remaining.remainingLabel}' : remaining.remainingLabel,
@@ -210,7 +216,21 @@ class _EpisodeCardState extends State<EpisodeCard>
             ),
           ),
           const SizedBox(width: 16),
-          _trailing(context, cs, fg),
+          BlocSelector<
+            PlayerCubit,
+            PlayerState,
+            (Duration total, Duration listened)
+          >(
+            selector: (state) {
+              if (state.episode == episode) {
+                return (state.duration, state.position);
+              } else {
+                return (episode.total, episode.listened);
+              }
+            },
+            builder: (context, value) =>
+                _trailing(context, cs, fg, value.$1, value.$2),
+          ),
         ],
       ),
     );

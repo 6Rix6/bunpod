@@ -2,6 +2,7 @@ import 'package:bunpod/bunpod.dart';
 import 'package:expressive_loading_indicator/expressive_loading_indicator.dart';
 import 'package:expressive_refresh_indicator/expressive_refresh_indicator.dart';
 import 'package:expressive_snack/expressive_snack.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -59,6 +60,10 @@ class _HomePageLoadedState extends State<HomePageLoaded>
   void initState() {
     super.initState();
     _tabController.animation!.addListener(_syncChannelToTab);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      logarte.attach(context: context, visible: kDebugMode);
+    });
   }
 
   @override

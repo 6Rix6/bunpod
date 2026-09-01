@@ -1,3 +1,5 @@
+import 'package:audio_service/audio_service.dart';
+import 'package:expressive_loading_indicator/expressive_loading_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:motor/motor.dart';
 
@@ -8,12 +10,14 @@ class PlayButton extends StatefulWidget {
   const PlayButton({
     super.key,
     required this.playing,
+    required this.processing,
     required this.color,
     required this.foreground,
     required this.onTap,
   });
 
   final bool playing;
+  final AudioProcessingState processing;
   final Color color;
   final Color foreground;
   final VoidCallback onTap;
@@ -75,13 +79,7 @@ class _PlayButtonState extends State<PlayButton> {
               },
               child: SizedBox.expand(
                 child: Center(
-                  child: Icon(
-                    widget.playing
-                        ? Icons.pause_rounded
-                        : Icons.play_arrow_rounded,
-                    color: widget.foreground,
-                    size: 56,
-                  ),
+                  child: _icon(),
                 ),
               ),
             ),
@@ -89,5 +87,17 @@ class _PlayButtonState extends State<PlayButton> {
         );
       },
     );
+  }
+
+  Widget _icon() {
+    return switch (widget.processing) {
+      .loading ||
+      .buffering => LoadingIndicator(activeIndicatorColor: widget.foreground),
+      _ => Icon(
+        widget.playing ? Icons.pause_rounded : Icons.play_arrow_rounded,
+        color: widget.foreground,
+        size: 56,
+      ),
+    };
   }
 }

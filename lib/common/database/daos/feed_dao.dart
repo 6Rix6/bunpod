@@ -17,8 +17,16 @@ class FeedDao extends DatabaseAccessor<AppDatabase> with _$FeedDaoMixin {
   }
 
   /// On successful retrieval: upserts the feed metadata and returns the ID
-  Future<int> upsertFeed(FeedsCompanion companion) {
-    return into(feeds).insertOnConflictUpdate(companion);
+  Future<int> upsertFeed(FeedsCompanion companion) async {
+    final row = await into(feeds).insertReturning(
+      companion,
+      onConflict: DoUpdate(
+        (old) => companion,
+        target: [feeds.url],
+      ),
+    );
+
+    return row.id;
   }
 
   /// Upserts the episodes (based on guid).

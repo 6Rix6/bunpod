@@ -76,43 +76,22 @@ class ChannelPage extends StatelessWidget {
   }
 }
 
-class _ChannelPageLoaded extends StatefulWidget {
-  const _ChannelPageLoaded({required this.episodes, required this.channel});
+class _ChannelPageLoaded extends StatelessWidget {
+  const _ChannelPageLoaded({
+    required this.episodes,
+    required this.channel,
+  });
 
   final List<Episode> episodes;
   final Channel channel;
 
   @override
-  State<_ChannelPageLoaded> createState() => _ChannelPageLoadedState();
-}
-
-class _ChannelPageLoadedState extends State<_ChannelPageLoaded> {
-  // Drives the hero cover's spring entrance once the first frame is laid out.
-  bool _entered = false;
-  // Subscriptions are mock-only — every catalog channel starts subscribed.
-  bool _subscribed = true;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) setState(() => _entered = true);
-    });
-  }
-
-  // Mock-only: holds the expressive indicator for a beat; a real feed fetch
-  // goes here later.
-  Future<void> _refresh() {
-    return Future<void>.delayed(const Duration(milliseconds: 1500));
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final Channel channel = widget.channel;
-    final ColorScheme cs = channel.scheme(context);
-    final TextTheme tt = Theme.of(context).textTheme;
-
-    final List<Episode> episodes = widget.episodes;
+    final ThemeData theme = Theme.of(
+      context,
+    ).copyWith(colorScheme: channel.scheme(context));
+    final ColorScheme cs = theme.colorScheme;
+    final TextTheme tt = theme.textTheme;
 
     // The header collapses from a full hero down to a plain back-button bar, so
     // measure the channel name to know exactly how tall the expanded state is.
@@ -153,191 +132,100 @@ class _ChannelPageLoadedState extends State<_ChannelPageLoaded> {
         24 + // name -> subscribe
         _kSubscribeHeight;
 
-    return Scaffold(
-      backgroundColor: cs.surface,
-      body: ExpressiveRefreshIndicator(
-        onRefresh: _refresh,
-        // Tint to the channel's seed scheme like the rest of the page. Descend
-        // from below the pinned back-button bar (this page's app-bar
-        // equivalent), not from behind the status bar — matching how Compose's
-        // indicator comes from the top of the content below the app bar.
-        color: cs.onPrimaryContainer,
-        backgroundColor: cs.primaryContainer,
-        edgeOffset: topPad + kToolbarHeight,
-        child: CustomScrollView(
-          slivers: [
-            SliverPersistentHeader(
-              pinned: true,
-              delegate: _ChannelHeaderDelegate(
-                channel: channel,
-                scheme: cs,
-                topPad: topPad,
-                minExtentValue: minExtent,
-                maxExtentValue: maxExtent,
-                entered: _entered,
-                subscribed: _subscribed,
-                onSubscribe: () => setState(() => _subscribed = !_subscribed),
+    return Theme(
+      data: theme,
+      child: Scaffold(
+        backgroundColor: cs.surface,
+        body: ExpressiveRefreshIndicator(
+          onRefresh: () async {
+            await Future.delayed(const Duration(seconds: 3));
+          },
+          edgeOffset: topPad + kToolbarHeight,
+          color: cs.onPrimaryContainer,
+          backgroundColor: cs.primaryContainer,
+          notificationPredicate: (notification) => notification.depth == 1,
+          child: SnapScrollView(
+            appBar: SnapAppBar(
+              expandedHeight: maxExtent,
+              actionsAlignment: .topRight,
+              collapsedTitleAlignment: .topLeft,
+              expandedTitle: _hero(context, cs, tt, topPad),
+              collapsedTitle: Text(
+                channel.name,
+                style: tt.titleMedium?.copyWith(
+                  color: cs.onSurface,
+                  fontWeight: FontWeight.w700,
+                ),
+                maxLines: 1,
+                overflow: .ellipsis,
               ),
             ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (channel.description.isNotEmpty) ...[
+            slivers: [
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (channel.description.isNotEmpty) ...[
+                        Text(
+                          channel.description,
+                          style: tt.bodyMedium?.copyWith(
+                            color: cs.onSurfaceVariant,
+                            height: 1.5,
+                          ),
+                        ),
+                        28.gap,
+                      ],
                       Text(
-                        channel.description,
-                        style: tt.bodyMedium?.copyWith(
-                          color: cs.onSurfaceVariant,
-                          height: 1.5,
+                        'Episodes',
+                        style: GoogleFonts.unbounded(
+                          textStyle: tt.titleLarge,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.3,
+                          color: cs.onSurface,
                         ),
                       ),
-                      28.gap,
+                      12.gap,
                     ],
-                    Text(
-                      'Episodes',
-                      style: GoogleFonts.unbounded(
-                        textStyle: tt.titleLarge,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: -0.3,
-                        color: cs.onSurface,
-                      ),
-                    ),
-                    12.gap,
-                  ],
+                  ),
                 ),
               ),
-            ),
-            SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, i) {
-                  final Episode ep = episodes[i];
-                  return Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-                    child: BlocSelector<PlayerCubit, PlayerState, Episode?>(
-                      selector: (state) => state.episode,
-                      builder: (state, current) => EpisodeCard(
-                        episode: ep,
-                        playing: ep == current,
-                        onTap: () => Navigator.of(
-                          context,
-                        ).push(PlayerPage.route(ep, fromChannel: true)),
+              SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, i) {
+                    final Episode ep = episodes[i];
+                    return Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+                      child: BlocSelector<PlayerCubit, PlayerState, Episode?>(
+                        selector: (state) => state.episode,
+                        builder: (state, current) => EpisodeCard(
+                          episode: ep,
+                          playing: ep == current,
+                          onTap: () => Navigator.of(
+                            context,
+                          ).push(PlayerPage.route(ep, fromChannel: true)),
+                        ),
                       ),
-                    ),
-                  );
-                },
-                childCount: episodes.length,
+                    );
+                  },
+                  childCount: episodes.length,
+                ),
               ),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: 32)),
-          ],
+              const SliverToBoxAdapter(child: SizedBox(height: 32)),
+            ],
+          ),
         ),
       ),
     );
   }
-}
 
-/// Collapsing channel header. The back button is pinned at the top at all times;
-/// everything else (cover, host, name, subscribe) parallaxes upward and fades as
-/// the user scrolls, while a compact channel name crossfades into the bar.
-class _ChannelHeaderDelegate extends SliverPersistentHeaderDelegate {
-  _ChannelHeaderDelegate({
-    required this.channel,
-    required this.scheme,
-    required this.topPad,
-    required this.minExtentValue,
-    required this.maxExtentValue,
-    required this.entered,
-    required this.subscribed,
-    required this.onSubscribe,
-  });
-
-  final Channel channel;
-  final ColorScheme scheme;
-  final double topPad;
-  final double minExtentValue;
-  final double maxExtentValue;
-  final bool entered;
-  final bool subscribed;
-  final VoidCallback onSubscribe;
-
-  @override
-  double get minExtent => minExtentValue;
-
-  @override
-  double get maxExtent => maxExtentValue;
-
-  @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlaps) {
-    final ColorScheme cs = scheme;
-    final TextTheme tt = Theme.of(context).textTheme;
-    final double range = maxExtentValue - minExtentValue;
-    final double t = range <= 0 ? 1 : (shrinkOffset / range).clamp(0.0, 1.0);
-
-    // Hero fades out a touch before fully collapsed so it's gone by the time the
-    // compact title takes over.
-    final double heroOpacity = (1 - t * 1.25).clamp(0.0, 1.0);
-    final double barTitleOpacity = ((t - 0.45) / 0.55).clamp(0.0, 1.0);
-
-    return ClipRect(
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          ColoredBox(color: cs.surface),
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: Opacity(
-              opacity: heroOpacity,
-              child: Transform.translate(
-                offset: Offset(0, -shrinkOffset * 0.4),
-                child: IgnorePointer(
-                  ignoring: t > 0.5,
-                  child: _hero(context, cs, tt),
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: SafeArea(
-              bottom: false,
-              child: SizedBox(
-                height: kToolbarHeight,
-                child: Row(
-                  children: [
-                    StyledBackButton(color: cs.onSurface),
-                    Expanded(
-                      child: Opacity(
-                        opacity: barTitleOpacity,
-                        child: Text(
-                          channel.name,
-                          textAlign: TextAlign.center,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: tt.titleMedium?.copyWith(
-                            color: cs.onSurface,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 48),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _hero(BuildContext context, ColorScheme cs, TextTheme tt) {
+  Widget _hero(
+    BuildContext context,
+    ColorScheme cs,
+    TextTheme tt,
+    double topPad,
+  ) {
     return Column(
       children: [
         // Reserve the pinned bar's space so the cover sits below the back button.
@@ -345,7 +233,8 @@ class _ChannelHeaderDelegate extends SliverPersistentHeaderDelegate {
         8.gap,
         SingleMotionBuilder(
           motion: const MaterialSpringMotion.expressiveSpatialSlow(),
-          value: entered ? 1.0 : 0.0,
+          value: 1.0,
+          from: 0.0,
           builder: (context, t, child) {
             final double tc = t.clamp(0.0, 1.0);
             return Opacity(
@@ -396,24 +285,13 @@ class _ChannelHeaderDelegate extends SliverPersistentHeaderDelegate {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: _SubscribeButton(
-            subscribed: subscribed,
+            subscribed: false,
             scheme: cs,
-            onTap: onSubscribe,
+            onTap: () {},
           ),
         ),
       ],
     );
-  }
-
-  @override
-  bool shouldRebuild(covariant _ChannelHeaderDelegate old) {
-    return old.channel != channel ||
-        old.scheme != scheme ||
-        old.topPad != topPad ||
-        old.minExtentValue != minExtentValue ||
-        old.maxExtentValue != maxExtentValue ||
-        old.entered != entered ||
-        old.subscribed != subscribed;
   }
 }
 

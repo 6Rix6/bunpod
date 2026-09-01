@@ -140,6 +140,7 @@ class _PlayerPageState extends State<PlayerPage> {
                 PlayerControls(
                   scheme: cs,
                   playing: state.playing,
+                  processing: state.processing,
                   fav: _fav,
                   onPlayPause: () => locator<PlayerCubit>().toggle(),
                   onFav: () => setState(() => _fav = !_fav),

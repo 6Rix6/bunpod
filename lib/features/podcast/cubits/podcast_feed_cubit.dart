@@ -18,11 +18,13 @@ class PodcastFeedCubit extends Cubit<ViewState<PodcastFeed>> {
 
     final nextState = await ViewState.guard(_fetchFeeds);
 
-    emit(nextState);
+    if (!isClosed) {
+      emit(nextState);
+    }
   }
 
   Future<void> refresh({void Function(Object error)? onError}) async {
-    if (state.isBusy) return;
+    if (state.isBusy || isClosed) return;
 
     final previousState = state;
     emit(previousState.copyWithPrevious(const ViewBusy()));
@@ -32,7 +34,9 @@ class PodcastFeedCubit extends Cubit<ViewState<PodcastFeed>> {
       onError: onError,
     );
 
-    emit(previousState.copyWithPrevious(nextState));
+    if (!isClosed) {
+      emit(previousState.copyWithPrevious(nextState));
+    }
   }
 
   TaskEither<AppError, PodcastFeed> get _fetchFeeds {

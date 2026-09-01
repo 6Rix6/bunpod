@@ -27,6 +27,7 @@ abstract final class MaterialThemes {
     return base.copyWith(
       textTheme: GoogleFonts.googleSansTextTheme(base.textTheme),
       pageTransitionsTheme: _pageTransitionsTheme,
+      appBarTheme: AppBarThemeData(scrolledUnderElevation: 0),
     );
   }
 }
