@@ -49,4 +49,8 @@ Future<void> setupLocator() async {
     ..registerFactory<SubscribedFeedsCubit>(
       () => SubscribedFeedsCubit(locator()),
     );
+
+  locator.registerLazySingleton<SubscriptionRepository>(
+    () => SubscriptionRepositoryImpl(locator()),
+  );
 }

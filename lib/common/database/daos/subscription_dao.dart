@@ -20,6 +20,29 @@ class SubscriptionDao extends DatabaseAccessor<AppDatabase>
     return row != null;
   }
 
+  Stream<bool> watchIsSubscribed(int feedId) {
+    final query = select(subscribedChannels)
+      ..where((s) => s.feedId.equals(feedId));
+    return query.watchSingleOrNull().map((row) => row != null);
+  }
+
+  Future<bool> isSubscribedByUrl(String url) async {
+    final query = select(subscribedChannels).join([
+      innerJoin(feeds, feeds.id.equalsExp(subscribedChannels.feedId)),
+    ])..where(feeds.url.equals(url));
+
+    final row = await query.getSingleOrNull();
+    return row != null;
+  }
+
+  Stream<bool> watchIsSubscribedByUrl(String url) {
+    final query = select(subscribedChannels).join([
+      innerJoin(feeds, feeds.id.equalsExp(subscribedChannels.feedId)),
+    ])..where(feeds.url.equals(url));
+
+    return query.watchSingleOrNull().map((row) => row != null);
+  }
+
   Future<void> subscribe(int feedId) async {
     final maxOrder = await _maxSortOrder();
     await into(subscribedChannels).insert(
@@ -36,6 +59,27 @@ class SubscriptionDao extends DatabaseAccessor<AppDatabase>
     return (delete(
       subscribedChannels,
     )..where((s) => s.feedId.equals(feedId))).go();
+  }
+
+  Future<void> subscribeByUrl(String url) async {
+    final feedId = await _feedIdByUrl(url);
+    if (feedId == null) {
+      throw StateError('Feed not found for url: $url');
+    }
+    await subscribe(feedId);
+  }
+
+  Future<void> unsubscribeByUrl(String url) async {
+    final feedId = await _feedIdByUrl(url);
+    if (feedId == null) return;
+    await unsubscribe(feedId);
+  }
+
+  Future<int?> _feedIdByUrl(String url) async {
+    final feed = await (select(
+      feeds,
+    )..where((f) => f.url.equals(url))).getSingleOrNull();
+    return feed?.id;
   }
 
   Future<int> _maxSortOrder() async {

@@ -41,6 +41,7 @@ class ChannelPage extends StatelessWidget {
       child: BlocBuilder<PodcastFeedCubit, ViewState<PodcastFeed>>(
         builder: (context, state) => switch (state) {
           _ when state.dataOrNull != null => _ChannelPageLoaded(
+            feedUrl: feedUrl,
             episodes: state.dataOrNull!.episodes,
             channel: state.dataOrNull!.channel,
           ),
@@ -65,7 +66,11 @@ class ChannelPage extends StatelessWidget {
     final ColorScheme cs = Theme.of(context).colorScheme;
 
     if (channel != null && episodes != null) {
-      return _ChannelPageLoaded(episodes: episodes!, channel: channel!);
+      return _ChannelPageLoaded(
+        feedUrl: feedUrl,
+        episodes: episodes!,
+        channel: channel!,
+      );
     }
 
     return Scaffold(
@@ -78,10 +83,12 @@ class ChannelPage extends StatelessWidget {
 
 class _ChannelPageLoaded extends StatelessWidget {
   const _ChannelPageLoaded({
+    required this.feedUrl,
     required this.episodes,
     required this.channel,
   });
 
+  final String feedUrl;
   final List<Episode> episodes;
   final Channel channel;
 
@@ -284,10 +291,15 @@ class _ChannelPageLoaded extends StatelessWidget {
         24.gap,
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: _SubscribeButton(
-            subscribed: false,
-            scheme: cs,
-            onTap: () {},
+          child: BlocProvider(
+            create: (_) => SubscriptionCubit(locator(), feedUrl: feedUrl),
+            child: BlocBuilder<SubscriptionCubit, ViewState<bool>>(
+              builder: (context, state) => _SubscribeButton(
+                subscribed: state.dataOrNull ?? false,
+                scheme: cs,
+                onTap: context.read<SubscriptionCubit>().toggle,
+              ),
+            ),
           ),
         ),
       ],

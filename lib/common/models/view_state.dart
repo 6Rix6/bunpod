@@ -1,10 +1,31 @@
 import 'package:bunpod/bunpod.dart';
 import 'package:fpdart/fpdart.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'view_state.freezed.dart';
+part 'view_state.g.dart';
 
 typedef ViewStateError = AppError;
 
-sealed class ViewState<T> {
-  const ViewState();
+@Freezed(genericArgumentFactories: true)
+sealed class ViewState<T> with _$ViewState<T> {
+  const ViewState._();
+
+  const factory ViewState.idle() = ViewIdle<T>;
+
+  const factory ViewState.busy([T? data]) = ViewBusy<T>;
+
+  const factory ViewState.ready(T data) = ViewReady<T>;
+
+  const factory ViewState.failed([
+    AppError? error,
+    T? previousData,
+  ]) = ViewFailed<T>;
+
+  factory ViewState.fromJson(
+    Map<String, dynamic> json,
+    T Function(Object? json) fromJsonT,
+  ) => _$ViewStateFromJson(json, fromJsonT);
 
   // Copyright: aljan.me
   static Future<ViewState<T>> guard<T>(
@@ -38,27 +59,23 @@ sealed class ViewState<T> {
       _ => next,
     };
   }
-}
 
-final class ViewIdle<T> extends ViewState<T> {
-  const ViewIdle();
-}
+  bool get isIdle => this is ViewIdle<T>;
+  bool get isBusy => this is ViewBusy<T>;
+  bool get isReady => this is ViewReady<T>;
+  bool get isFailed => this is ViewFailed<T>;
 
-final class ViewBusy<T> extends ViewState<T> {
-  final T? data;
+  T get requireData => (this as ViewReady<T>).data!;
 
-  const ViewBusy([this.data]);
-}
+  T? get dataOrNull => switch (this) {
+    ViewReady(:final data) => data,
+    ViewBusy(:final data) => data,
+    ViewFailed(:final previousData) => previousData,
+    _ => null,
+  };
 
-final class ViewReady<T> extends ViewState<T> {
-  final T data;
-
-  const ViewReady(this.data);
-}
-
-final class ViewFailed<T> extends ViewState<T> {
-  final ViewStateError? error;
-  final T? previousData;
-
-  const ViewFailed([this.error, this.previousData]);
+  ViewStateError? get errorOrNull => switch (this) {
+    ViewFailed(:final error) => error,
+    _ => null,
+  };
 }
