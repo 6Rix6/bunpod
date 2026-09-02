@@ -7,6 +7,24 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+sealed class SliverItem {}
+
+class HeaderItem extends SliverItem {
+  final String label;
+  final int count;
+  final double topPadding;
+  HeaderItem({
+    required this.label,
+    required this.count,
+    required this.topPadding,
+  });
+}
+
+class EpisodeItem extends SliverItem {
+  final Episode episode;
+  EpisodeItem(this.episode);
+}
+
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
@@ -209,43 +227,34 @@ class _HomePageLoadedState extends State<HomePageLoaded>
 
   Widget _buildPage(BuildContext context, String? channelName) {
     final List<Episode> visible = channelName == null
-        ? widget.feeds
-              .map((feed) => feed.episodes)
-              .expand((eps) => eps)
-              .toList()
+        ? widget.feeds.expand((feed) => feed.episodes).toList()
         : widget.feeds
-              .firstWhere((feed) => feed.channel.name == channelName)
+              .firstWhere(
+                (feed) => feed.channel.name == channelName,
+                orElse: () => widget.feeds.first,
+              )
               .episodes;
 
-    final List<Widget> children = <Widget>[];
+    final List<SliverItem> items = [];
     bool first = true;
+
     for (final Bucket bucket in Bucket.values) {
       final List<Episode> eps = visible
           .where((e) => e.bucket == bucket)
           .toList();
       if (eps.isEmpty) continue;
-      children.add(
-        SectionHeader(
+
+      items.add(
+        HeaderItem(
           label: _bucketLabels[bucket]!,
           count: eps.length,
           topPadding: first ? 16 : 32,
         ),
       );
       first = false;
+
       for (final Episode ep in eps) {
-        children.add(
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-            child: BlocSelector<PlayerCubit, PlayerState, Episode?>(
-              selector: (state) => state.episode,
-              builder: (context, current) => EpisodeCard(
-                episode: ep,
-                playing: ep == current,
-                onTap: () => _openPlayer(ep),
-              ),
-            ),
-          ),
-        );
+        items.add(EpisodeItem(ep));
       }
     }
 
@@ -257,7 +266,38 @@ class _HomePageLoadedState extends State<HomePageLoaded>
         ),
         SliverPadding(
           padding: const EdgeInsets.only(bottom: 32),
-          sliver: SliverList(delegate: SliverChildListDelegate(children)),
+          sliver: SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                final item = items[index];
+
+                if (item is HeaderItem) {
+                  return SectionHeader(
+                    label: item.label,
+                    count: item.count,
+                    topPadding: item.topPadding,
+                  );
+                }
+
+                if (item is EpisodeItem) {
+                  final ep = item.episode;
+                  return Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                    child: BlocSelector<PlayerCubit, PlayerState, Episode?>(
+                      selector: (state) => state.episode,
+                      builder: (context, current) => EpisodeCard(
+                        episode: ep,
+                        playing: ep == current,
+                        onTap: () => _openPlayer(ep),
+                      ),
+                    ),
+                  );
+                }
+                return const SizedBox.shrink();
+              },
+              childCount: items.length,
+            ),
+          ),
         ),
       ],
     );
@@ -275,7 +315,9 @@ class _HomePageLoadedState extends State<HomePageLoaded>
         scrollBehavior: const CupertinoScrollBehavior(),
         headerSliverBuilder: (context, innerScrolled) {
           return [
-            SliverToBoxAdapter(child: _buildHomePlayer()),
+            SliverToBoxAdapter(
+              child: RepaintBoundary(child: _buildHomePlayer()),
+            ),
             SliverOverlapAbsorber(
               handle: NestedScrollView.sliverOverlapAbsorberHandleFor(
                 context,

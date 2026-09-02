@@ -64,57 +64,49 @@ class _EpisodeCardState extends State<EpisodeCard>
     final Color fill = cs.primary;
     final Color onFill = cs.onPrimary;
 
-    return SingleMotionBuilder(
-      motion: const MaterialSpringMotion.standardSpatialFast(),
-      value: playing ? 1.0 : 0.0,
-      builder: (context, t, child) {
-        final double radius = 24 + (40 - 24) * t;
-        return Container(
-          clipBehavior: Clip.antiAlias,
-          decoration: BoxDecoration(
-            color: cs.surfaceContainerHigh,
-            borderRadius: BorderRadius.circular(radius < 0 ? 0 : radius),
-          ),
-          child: child,
-        );
-      },
-      child: AnimatedBuilder(
-        animation: _marquee,
-        builder: (context, _) {
-          final double marqueeTime =
-              _marquee.value * _marqueeCycle.inMilliseconds / 1000;
-
-          return BlocSelector<PlayerCubit, PlayerState, double>(
-            selector: (state) {
-              return state.episode == episode ? state.progress : progress;
-            },
-            builder: (context, p) {
-              return Stack(
-                children: [
-                  Positioned.fill(
-                    child: ClipRect(
-                      clipper: _FillClipper(start: _kFillStart, fraction: p),
-                      child: ColoredBox(color: fill),
-                    ),
-                  ),
-                  _content(context, cs, cs.onSurface, marqueeTime),
-                  Positioned.fill(
-                    child: ClipRect(
-                      clipper: _FillClipper(start: _kFillStart, fraction: p),
-                      child: _content(context, cs, onFill, marqueeTime),
-                    ),
-                  ),
-                  Positioned.fill(
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(onTap: widget.onTap),
-                    ),
-                  ),
-                ],
-              );
-            },
+    return RepaintBoundary(
+      child: SingleMotionBuilder(
+        motion: const MaterialSpringMotion.standardSpatialFast(),
+        value: playing ? 1.0 : 0.0,
+        builder: (context, t, child) {
+          final double radius = 24 + (40 - 24) * t;
+          return Container(
+            clipBehavior: Clip.antiAlias,
+            decoration: BoxDecoration(
+              color: cs.surfaceContainerHigh,
+              borderRadius: BorderRadius.circular(radius < 0 ? 0 : radius),
+            ),
+            child: child,
           );
         },
+        child: BlocSelector<PlayerCubit, PlayerState, double>(
+          selector: (state) {
+            return state.episode == episode ? state.progress : progress;
+          },
+          builder: (context, p) {
+            return Stack(
+              children: [
+                Positioned.fill(
+                  child: ClipRect(
+                    clipper: _FillClipper(start: _kFillStart, fraction: p),
+                    child: ColoredBox(color: fill),
+                  ),
+                ),
+                _content(context, cs, cs.onSurface, onFill, p),
+                Padding(
+                  padding: EdgeInsets.all(12),
+                  child: _cover(cs),
+                ),
+                Positioned.fill(
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(onTap: widget.onTap),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -161,83 +153,119 @@ class _EpisodeCardState extends State<EpisodeCard>
     );
   }
 
+  Widget _cover(ColorScheme cs, {bool placeholder = false}) {
+    final double dimension = 56.0;
+
+    if (placeholder) {
+      return SizedBox.square(
+        dimension: dimension,
+      );
+    }
+
+    final Episode episode = widget.episode;
+
+    return SingleMotionBuilder(
+      motion: const MaterialSpringMotion.standardSpatialFast(),
+      value: widget.playing ? 1.0 : 0.0,
+      builder: (context, t, child) => ClipPath(
+        clipper: ShapeBorderClipper(
+          shape: ShapeValues.coverBorder(t),
+        ),
+        child: child,
+      ),
+      child: SizedBox.square(
+        dimension: dimension,
+        child: _Cover(episode: episode, scheme: cs),
+      ),
+    );
+  }
+
   Widget _content(
     BuildContext context,
     ColorScheme cs,
     Color fg,
-    double marqueeTime,
+    Color bg,
+    double p,
   ) {
     final Episode episode = widget.episode;
     final TextTheme tt = Theme.of(context).textTheme;
-    return Padding(
-      padding: const EdgeInsets.all(12),
-      child: Row(
-        children: [
-          SingleMotionBuilder(
-            motion: const MaterialSpringMotion.standardSpatialFast(),
-            value: widget.playing ? 1.0 : 0.0,
-            builder: (context, t, child) => ClipPath(
-              clipper: ShapeBorderClipper(shape: ShapeValues.coverBorder(t)),
-              child: child,
-            ),
-            child: SizedBox(
-              width: 56,
-              height: 56,
-              child: _Cover(episode: episode, scheme: cs),
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  episode.channel.toUpperCase(),
-                  style: tt.labelSmall?.copyWith(
-                    color: fg,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.8,
+
+    return ShaderMask(
+      blendMode: BlendMode.srcIn,
+      shaderCallback: (bounds) {
+        final double stop = p.clamp(0.0, 1.0);
+        return LinearGradient(
+          colors: [bg, bg, fg, fg],
+          stops: [0.0, stop, stop, 1.0],
+        ).createShader(bounds);
+      },
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          children: [
+            // placeholder for cover
+            _cover(cs, placeholder: true),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    episode.channel.toUpperCase(),
+                    style: tt.labelSmall?.copyWith(
+                      color: fg,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.8,
+                    ),
+                    maxLines: 1,
+                    overflow: .ellipsis,
                   ),
-                  maxLines: 1,
-                  overflow: .ellipsis,
-                ),
-                const SizedBox(height: 2),
-                _Title(
-                  text: episode.title,
-                  style: tt.titleMedium?.copyWith(
-                    color: fg,
-                    fontWeight: FontWeight.w700,
+                  const SizedBox(height: 2),
+                  AnimatedBuilder(
+                    animation: _marquee,
+                    builder: (context, _) {
+                      final double marqueeTime =
+                          _marquee.value * _marqueeCycle.inMilliseconds / 1000;
+
+                      return _Title(
+                        text: episode.title,
+                        style: tt.titleMedium?.copyWith(
+                          color: fg,
+                          fontWeight: FontWeight.w700,
+                        ),
+                        playing: widget.playing,
+                        marqueeTime: marqueeTime,
+                      );
+                    },
                   ),
-                  playing: widget.playing,
-                  marqueeTime: marqueeTime,
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          const SizedBox(width: 16),
-          BlocSelector<
-            PlayerCubit,
-            PlayerState,
-            (Duration total, Duration listened)
-          >(
-            selector: (state) {
-              if (state.episode == episode) {
-                return (state.duration, state.position);
-              } else {
-                return (episode.total, episode.listened);
-              }
-            },
-            builder: (context, value) =>
-                _trailing(context, cs, fg, value.$1, value.$2),
-          ),
-        ],
+            const SizedBox(width: 16),
+            BlocSelector<
+              PlayerCubit,
+              PlayerState,
+              (Duration total, Duration listened)
+            >(
+              selector: (state) {
+                if (state.episode == episode) {
+                  return (state.duration, state.position);
+                } else {
+                  return (episode.total, episode.listened);
+                }
+              },
+              builder: (context, value) =>
+                  _trailing(context, cs, fg, value.$1, value.$2),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-class _Title extends StatelessWidget {
+class _Title extends StatefulWidget {
   const _Title({
     required this.text,
     required this.style,
@@ -250,6 +278,11 @@ class _Title extends StatelessWidget {
   final bool playing;
   final double marqueeTime;
 
+  @override
+  State<_Title> createState() => _TitleState();
+}
+
+class _TitleState extends State<_Title> {
   static const double _speed = 45;
   static const double _minTravel = 1.4;
   static const double _maxTravel = 6.0;
@@ -273,17 +306,48 @@ class _Title extends StatelessWidget {
     return t;
   }
 
+  TextPainter? _tp;
+
+  void _layout() {
+    _tp?.dispose();
+    _tp = TextPainter(
+      text: TextSpan(text: widget.text, style: widget.style),
+      maxLines: 1,
+      textDirection: Directionality.of(context),
+      textScaler: MediaQuery.textScalerOf(context),
+    )..layout();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _layout();
+  }
+
+  @override
+  void didUpdateWidget(covariant _Title oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.text != oldWidget.text || widget.style != oldWidget.style) {
+      _layout();
+    }
+  }
+
+  @override
+  void dispose() {
+    _tp?.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final String text = widget.text;
+    final TextStyle? style = widget.style;
+    final bool playing = widget.playing;
+    final TextPainter tp = _tp!;
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final double maxWidth = constraints.maxWidth;
-        final TextPainter tp = TextPainter(
-          text: TextSpan(text: text, style: style),
-          maxLines: 1,
-          textDirection: Directionality.of(context),
-          textScaler: MediaQuery.textScalerOf(context),
-        )..layout();
         final double overflow = tp.width - maxWidth;
 
         if (overflow <= 0.5) {
@@ -340,7 +404,7 @@ class _Title extends StatelessWidget {
 
   double _offset(double overflow) {
     final double travel = (overflow / _speed).clamp(_minTravel, _maxTravel);
-    final double t = marqueeTime;
+    final double t = widget.marqueeTime;
     if (t < _holdStart) return 0;
     if (t < _holdStart + travel) {
       return _curve((t - _holdStart) / travel) * overflow;
