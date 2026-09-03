@@ -15,6 +15,10 @@ class SectionHeader extends StatelessWidget {
   final int count;
   final double topPadding;
 
+  static double height(double topPadding) {
+    return topPadding + 30 + 12;
+  }
+
   @override
   Widget build(BuildContext context) {
     final ColorScheme cs = Theme.of(context).colorScheme;

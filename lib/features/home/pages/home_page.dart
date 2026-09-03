@@ -267,6 +267,19 @@ class _HomePageLoadedState extends State<HomePageLoaded>
         SliverPadding(
           padding: const EdgeInsets.only(bottom: 32),
           sliver: SliverList(
+            // itemExtentBuilder: (index, dimensions) {
+            //   final item = items[index];
+            //
+            //   if (item is HeaderItem) {
+            //     return SectionHeader.height(item.topPadding);
+            //   }
+            //
+            //   if (item is EpisodeItem) {
+            //     return EpisodeCard.height + 8; // 8 for padding
+            //   }
+            //
+            //   return 0.0;
+            // },
             delegate: SliverChildBuilderDelegate(
               (context, index) {
                 final item = items[index];
@@ -283,11 +296,11 @@ class _HomePageLoadedState extends State<HomePageLoaded>
                   final ep = item.episode;
                   return Padding(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                    child: BlocSelector<PlayerCubit, PlayerState, Episode?>(
-                      selector: (state) => state.episode,
-                      builder: (context, current) => EpisodeCard(
+                    child: BlocSelector<PlayerCubit, PlayerState, bool>(
+                      selector: (state) => state.episode == ep,
+                      builder: (context, playing) => EpisodeCard(
                         episode: ep,
-                        playing: ep == current,
+                        playing: playing,
                         onTap: () => _openPlayer(ep),
                       ),
                     ),

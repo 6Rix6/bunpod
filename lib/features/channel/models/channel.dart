@@ -27,11 +27,7 @@ extension ChannelX on Channel {
 
   /// Per-channel color scheme, mirroring [Episode.scheme] so the channel page
   /// tints to the same palette as its episodes.
-  ColorScheme scheme(BuildContext context) => ColorScheme.fromSeed(
-    seedColor: seed,
-    brightness: Theme.of(context).brightness,
-    dynamicSchemeVariant: DynamicSchemeVariant.content,
-  );
+  ColorScheme scheme(BuildContext context) => SchemeCache.of(context, color);
 
   /// Episodes that belong to this channel, in feed order.
   List<Episode> get episodes =>

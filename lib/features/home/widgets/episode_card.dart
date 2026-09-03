@@ -18,6 +18,9 @@ class EpisodeCard extends StatefulWidget {
   final bool playing;
   final VoidCallback onTap;
 
+  static const double height =
+      _EpisodeCardState.coverSize + _EpisodeCardState.cardPadding * 2;
+
   @override
   State<EpisodeCard> createState() => _EpisodeCardState();
 }
@@ -25,6 +28,9 @@ class EpisodeCard extends StatefulWidget {
 class _EpisodeCardState extends State<EpisodeCard>
     with SingleTickerProviderStateMixin {
   static const Duration _marqueeCycle = Duration(seconds: 20);
+
+  static const double coverSize = 56.0;
+  static const double cardPadding = 12.0;
 
   late final AnimationController _marquee = AnimationController(
     vsync: this,
@@ -71,7 +77,7 @@ class _EpisodeCardState extends State<EpisodeCard>
         builder: (context, t, child) {
           final double radius = 24 + (40 - 24) * t;
           return Container(
-            clipBehavior: Clip.antiAlias,
+            clipBehavior: Clip.hardEdge,
             decoration: BoxDecoration(
               color: cs.surfaceContainerHigh,
               borderRadius: BorderRadius.circular(radius < 0 ? 0 : radius),
@@ -94,7 +100,7 @@ class _EpisodeCardState extends State<EpisodeCard>
                 ),
                 _content(context, cs, cs.onSurface, onFill, p),
                 Padding(
-                  padding: EdgeInsets.all(12),
+                  padding: EdgeInsets.all(cardPadding),
                   child: _cover(cs),
                 ),
                 Positioned.fill(
@@ -154,11 +160,9 @@ class _EpisodeCardState extends State<EpisodeCard>
   }
 
   Widget _cover(ColorScheme cs, {bool placeholder = false}) {
-    final double dimension = 56.0;
-
     if (placeholder) {
       return SizedBox.square(
-        dimension: dimension,
+        dimension: coverSize,
       );
     }
 
@@ -168,14 +172,19 @@ class _EpisodeCardState extends State<EpisodeCard>
       motion: const MaterialSpringMotion.standardSpatialFast(),
       value: widget.playing ? 1.0 : 0.0,
       builder: (context, t, child) => ClipPath(
+        clipBehavior: Clip.hardEdge,
         clipper: ShapeBorderClipper(
           shape: ShapeValues.coverBorder(t),
         ),
         child: child,
       ),
       child: SizedBox.square(
-        dimension: dimension,
-        child: _Cover(episode: episode, scheme: cs),
+        dimension: coverSize,
+        child: _Cover(
+          episode: episode,
+          scheme: cs,
+          size: coverSize,
+        ),
       ),
     );
   }
@@ -200,7 +209,7 @@ class _EpisodeCardState extends State<EpisodeCard>
         ).createShader(bounds);
       },
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(cardPadding),
         child: Row(
           children: [
             // placeholder for cover
@@ -441,14 +450,21 @@ class _FillClipper extends CustomClipper<Rect> {
 }
 
 class _Cover extends StatelessWidget {
-  const _Cover({required this.episode, required this.scheme});
+  const _Cover({
+    required this.episode,
+    required this.scheme,
+    required this.size,
+  });
   final Episode episode;
   final ColorScheme scheme;
+  final double size;
 
   @override
   Widget build(BuildContext context) {
     return SmoothImage(
       url: episode.image,
+      width: size,
+      height: size,
       placeholderColor: scheme.primaryContainer,
       placeholderChild: Icon(
         Icons.podcasts_rounded,

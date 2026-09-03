@@ -35,5 +35,5 @@ extension EpisodeX on Episode {
       total.inSeconds == 0 ? 0 : listened.inSeconds / total.inSeconds;
 
   Color get seed => Color(color);
-  ColorScheme scheme(BuildContext context) => seed.scheme(context);
+  ColorScheme scheme(BuildContext context) => SchemeCache.of(context, color);
 }

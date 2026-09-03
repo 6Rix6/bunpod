@@ -61,7 +61,7 @@ extension FeedEpisodeMapper on RSSFeedEpisode {
       title: title!,
       date: publishedAt!.toIso8601String(),
       color: seed.toARGB32(),
-      image: imageUrl ?? channel.image,
+      image: channel.image,
       audioUrl: audioUrl!,
       total: duration!,
       listened: Duration.zero,
