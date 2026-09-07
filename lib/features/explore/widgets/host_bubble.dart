@@ -1,7 +1,34 @@
 import 'package:bunpod/bunpod.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:material_shapes/material_shapes.dart';
 import 'package:motor/motor.dart';
+
+class HostBubbleForId extends StatelessWidget {
+  const HostBubbleForId({super.key, required this.id, required this.onTap});
+
+  final int id;
+  final ValueChanged<ExploreHost> onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => ExploreHostCubit(locator(), hostId: id),
+      child: BlocBuilder<ExploreHostCubit, ViewState<ExploreHost>>(
+        builder: (context, state) => switch (state) {
+          _
+              when state.dataOrNull != null &&
+                  state.dataOrNull!.channels.firstOrNull != null =>
+            HostBubble(
+              channel: state.dataOrNull!.channels.first,
+              onTap: () => onTap(state.dataOrNull!),
+            ),
+          _ => SizedBox.shrink(),
+        },
+      ),
+    );
+  }
+}
 
 class HostBubble extends StatefulWidget {
   const HostBubble({

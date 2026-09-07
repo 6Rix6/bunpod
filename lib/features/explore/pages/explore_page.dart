@@ -1,10 +1,11 @@
 import 'package:bunpod/bunpod.dart';
 import 'package:bunpod/features/explore/widgets/category_card.dart';
-import 'package:bunpod/features/explore/widgets/category_pill.dart';
+import 'package:bunpod/features/explore/widgets/explore_item_pill.dart';
 import 'package:bunpod/features/explore/widgets/explore_search_field.dart';
 import 'package:bunpod/features/explore/widgets/host_bubble.dart';
 import 'package:bunpod/features/explore/widgets/result_tile.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class ExplorePage extends StatefulWidget {
   const ExplorePage({super.key});
@@ -20,7 +21,11 @@ class ExplorePage extends StatefulWidget {
 class _ExplorePageState extends State<ExplorePage> {
   final TextEditingController _search = TextEditingController();
   final FocusNode _searchFocus = FocusNode();
-  ExploreCategory? _category;
+
+  final SearchCubit _searchCubit = SearchCubit(locator());
+  final ScrollController _scrollController = ScrollController();
+
+  ExploreItem? _exploreItem;
 
   @override
   void initState() {
@@ -32,146 +37,229 @@ class _ExplorePageState extends State<ExplorePage> {
   void dispose() {
     _search.dispose();
     _searchFocus.dispose();
+    _searchCubit.close();
+    _scrollController.dispose();
     super.dispose();
   }
 
   String get _query => _search.text.trim();
 
-  bool get _browsing => _query.isEmpty && _category == null;
+  void _pickExploreItem(ExploreItem item) async {
+    if (identical(_exploreItem, item)) {
+      _clearCategory();
+      return;
+    }
 
-  void _pickCategory(ExploreCategory category) {
-    setState(
-      () => _category = identical(_category, category) ? null : category,
-    );
+    switch (item) {
+      case ExploreCategory category:
+        await _searchCubit.searchByCategory(category.name);
+        break;
+      case ExploreHost host:
+        await _searchCubit.searchByHost(host.name);
+        break;
+    }
+
+    if (!mounted) return;
+
+    if (_query.isNotEmpty && identical(_exploreItem, item)) {
+      _searchCubit.filter(_query);
+    }
+
+    setState(() => _exploreItem = item);
+
+    await _scrollToTop();
   }
 
   void _clearCategory() {
-    setState(() => _category = null);
+    _search.clear();
+    _searchCubit.clear();
+    setState(() => _exploreItem = null);
   }
 
   void _clearSearch() {
     _search.clear();
+
+    if (_exploreItem != null) {
+      _searchCubit.filter('');
+    } else {
+      _searchCubit.clear();
+    }
+
     setState(() {});
   }
 
-  void _openChannel(Channel channel) {
-    Navigator.of(context).push(MockChannelPage.route(channel));
+  void _onQuerySubmitted(String value) {
+    final String query = value.trim();
+
+    if (_exploreItem != null) {
+      _searchCubit.filter(query);
+    } else {
+      if (query.isEmpty) return;
+      _searchCubit.search(query);
+    }
   }
 
-  /// Channels matching the active shelf and/or query. A query matches a
-  /// channel's name or host directly, and matches whole shelves by name.
-  List<Channel> get _results {
-    final List<Channel> pool = _category?.channels ?? mockChannels;
-    final String q = _query.toLowerCase();
-    if (q.isEmpty) return pool;
+  void _openChannel(String feedUrl) {
+    Navigator.of(context).push(ChannelPage.route(feedUrl));
+  }
 
-    final Set<String> viaCategory = <String>{
-      for (final ExploreCategory c in mockCategories)
-        if (c.name.toLowerCase().contains(q)) ...c.channelNames,
-    };
-
-    return <Channel>[
-      for (final Channel channel in pool)
-        if (channel.name.toLowerCase().contains(q) ||
-            channel.host.toLowerCase().contains(q) ||
-            viaCategory.contains(channel.name))
-          channel,
-    ];
+  Future<void> _scrollToTop() async {
+    await _scrollController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeInOut,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      appBar: const _AppBar(),
-      body: _Body(
-        search: _search,
-        searchFocus: _searchFocus,
-        category: _category,
-        browsing: _browsing,
-        results: _results,
-        onQueryChanged: (_) => setState(() {}),
-        onClearSearch: _clearSearch,
-        onPickCategory: _pickCategory,
-        onClearCategory: _clearCategory,
-        onOpenChannel: _openChannel,
+    return BlocProvider.value(
+      value: _searchCubit,
+      child: Scaffold(
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        appBar: _AppBar(
+          search: _search,
+          searchFocus: _searchFocus,
+          onQueryChanged: (_) {},
+          onQuerySubmitted: _onQuerySubmitted,
+          onClearSearch: _clearSearch,
+        ),
+        body: _Body(
+          exploreItem: _exploreItem,
+          onPickExploreItem: _pickExploreItem,
+          onClearCategory: _clearCategory,
+          onOpenChannel: _openChannel,
+          scrollController: _scrollController,
+        ),
       ),
     );
   }
 }
 
 class _AppBar extends StatelessWidget implements PreferredSizeWidget {
-  const _AppBar();
+  const _AppBar({
+    required this.search,
+    required this.searchFocus,
+    required this.onQueryChanged,
+    required this.onQuerySubmitted,
+    required this.onClearSearch,
+  });
+
+  final TextEditingController search;
+  final FocusNode searchFocus;
+  final ValueChanged<String> onQueryChanged;
+  final ValueChanged<String> onQuerySubmitted;
+  final VoidCallback onClearSearch;
 
   @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+  Size get preferredSize =>
+      Size.fromHeight(kToolbarHeight + _AppBarBottom.height);
 
   @override
   Widget build(BuildContext context) {
     return AppBar(
       leading: const StyledBackButton(),
       title: const Text('Explore'),
+      bottom: _AppBarBottom(
+        search: search,
+        searchFocus: searchFocus,
+        onQueryChanged: (_) {},
+        onQuerySubmitted: onQuerySubmitted,
+        onClearSearch: onClearSearch,
+      ),
+    );
+  }
+}
+
+class _AppBarBottom extends StatelessWidget implements PreferredSizeWidget {
+  const _AppBarBottom({
+    required this.search,
+    required this.searchFocus,
+    required this.onQueryChanged,
+    required this.onQuerySubmitted,
+    required this.onClearSearch,
+  });
+
+  final TextEditingController search;
+  final FocusNode searchFocus;
+  final ValueChanged<String> onQueryChanged;
+  final ValueChanged<String> onQuerySubmitted;
+  final VoidCallback onClearSearch;
+
+  static const EdgeInsets padding = EdgeInsets.fromLTRB(16, 0, 16, 8);
+  static double get height => ExploreSearchField.height + padding.vertical;
+
+  @override
+  Size get preferredSize => Size.fromHeight(height);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: padding,
+      child: BlocSelector<SearchCubit, ViewState<List<SearchResultItem>>, bool>(
+        selector: (state) => state is ViewBusy,
+        builder: (context, value) => ExploreSearchField(
+          controller: search,
+          focusNode: searchFocus,
+          onChanged: onQueryChanged,
+          onSubmitted: onQuerySubmitted,
+          onClear: onClearSearch,
+          isLoading: value,
+        ),
+      ),
     );
   }
 }
 
 class _Body extends StatelessWidget {
   const _Body({
-    required this.search,
-    required this.searchFocus,
-    required this.category,
-    required this.browsing,
-    required this.results,
-    required this.onQueryChanged,
-    required this.onClearSearch,
-    required this.onPickCategory,
+    required this.exploreItem,
+    required this.onPickExploreItem,
     required this.onClearCategory,
     required this.onOpenChannel,
+    required this.scrollController,
   });
 
-  final TextEditingController search;
-  final FocusNode searchFocus;
-  final ExploreCategory? category;
-  final bool browsing;
-  final List<Channel> results;
-  final ValueChanged<String> onQueryChanged;
-  final VoidCallback onClearSearch;
-  final ValueChanged<ExploreCategory> onPickCategory;
+  final ExploreItem? exploreItem;
+  final ValueChanged<ExploreItem> onPickExploreItem;
   final VoidCallback onClearCategory;
-  final ValueChanged<Channel> onOpenChannel;
+  final ValueChanged<String> onOpenChannel;
+  final ScrollController scrollController;
 
   @override
   Widget build(BuildContext context) {
     return CustomScrollView(
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      controller: scrollController,
       slivers: [
-        SliverPadding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-          sliver: SliverToBoxAdapter(
-            child: Column(
-              crossAxisAlignment: .start,
-              children: [
-                ExploreSearchField(
-                  controller: search,
-                  focusNode: searchFocus,
-                  onChanged: onQueryChanged,
-                  onClear: onClearSearch,
-                ),
-                if (category != null) ...[
-                  12.gap,
-                  CategoryPill(
-                    category: category!,
+        if (exploreItem != null)
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            sliver: SliverToBoxAdapter(
+              child: Column(
+                crossAxisAlignment: .start,
+                children: [
+                  ExploreItemPill(
+                    item: exploreItem!,
                     onClear: onClearCategory,
                   ),
                 ],
-              ],
+              ),
             ),
           ),
+        BlocBuilder<SearchCubit, ViewState<List<SearchResultItem>>>(
+          builder: (context, state) {
+            final data = state.dataOrNull;
+
+            if (data == null) {
+              return SliverMainAxisGroup(slivers: _browseSlivers(context));
+            }
+
+            return SliverMainAxisGroup(
+              slivers: _resultSlivers(context, data, onOpenChannel),
+            );
+          },
         ),
-        if (browsing)
-          ..._browseSlivers(context)
-        else
-          ..._resultSlivers(context),
         SliverToBoxAdapter(
           child: SizedBox(height: 24 + BottomPadding.of(context)),
         ),
@@ -200,24 +288,34 @@ class _Body extends StatelessWidget {
     return [
       SliverToBoxAdapter(child: _sectionLabel(context, 'HOSTS ON AIR')),
       SliverToBoxAdapter(
-        child: SizedBox(
-          height: 252,
-          child: GridView.builder(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              mainAxisSpacing: 16,
-              crossAxisSpacing: 12,
-              childAspectRatio: 1.32,
-            ),
-            itemCount: mockChannels.length,
-            itemBuilder: (BuildContext context, int index) {
-              final Channel channel = mockChannels[index];
+        child: BlocProvider<HostIdsCubit>(
+          create: (_) => HostIdsCubit(
+            locator(),
+          ),
+          child: BlocBuilder<HostIdsCubit, ViewState<List<int>>>(
+            builder: (context, state) {
+              final data = state.dataOrNull ?? [];
+              final count = data.length;
 
-              return HostBubble(
-                channel: channel,
-                onTap: () => onOpenChannel(channel),
+              return SizedBox(
+                height: 252,
+                child: GridView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    mainAxisSpacing: 16,
+                    crossAxisSpacing: 12,
+                    childAspectRatio: 1.32,
+                  ),
+                  itemCount: count,
+                  itemBuilder: (BuildContext context, int index) {
+                    return HostBubbleForId(
+                      id: data[index],
+                      onTap: onPickExploreItem,
+                    );
+                  },
+                ),
               );
             },
           ),
@@ -226,25 +324,37 @@ class _Body extends StatelessWidget {
       SliverToBoxAdapter(child: _sectionLabel(context, 'THE SHELVES')),
       SliverPadding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        sliver: SliverList.separated(
-          itemCount: mockCategories.length,
-          separatorBuilder: (_, _) => 4.gap,
-          itemBuilder: (BuildContext context, int index) {
-            final ExploreCategory category = mockCategories[index];
+        sliver: BlocProvider(
+          create: (_) => CategoryIdsCubit(locator()),
+          child: BlocBuilder<CategoryIdsCubit, ViewState<List<int>>>(
+            builder: (context, state) {
+              final data = state.dataOrNull ?? [];
+              final count = data.length;
 
-            return CategoryCard(
-              category: category,
-              first: index == 0,
-              last: index == mockCategories.length - 1,
-              onTap: () => onPickCategory(category),
-            );
-          },
+              return SliverList.separated(
+                itemCount: count,
+                separatorBuilder: (_, _) => 4.gap,
+                itemBuilder: (BuildContext context, int index) {
+                  return CategoryCardForId(
+                    id: data[index],
+                    first: index == 0,
+                    last: index == count - 1,
+                    onTap: onPickExploreItem,
+                  );
+                },
+              );
+            },
+          ),
         ),
       ),
     ];
   }
 
-  List<Widget> _resultSlivers(BuildContext context) {
+  List<Widget> _resultSlivers(
+    BuildContext context,
+    List<SearchResultItem> results,
+    ValueChanged<String> onOpenChannel,
+  ) {
     final ColorScheme cs = Theme.of(context).colorScheme;
     final TextTheme tt = Theme.of(context).textTheme;
 
@@ -283,16 +393,17 @@ class _Body extends StatelessWidget {
             crossAxisCount: 3,
             mainAxisSpacing: 20,
             crossAxisSpacing: 12,
-            childAspectRatio: 0.72,
+            childAspectRatio: 0.69,
           ),
           itemCount: results.length,
           itemBuilder: (BuildContext context, int index) {
-            final Channel channel = results[index];
+            final item = results[index];
+            final Channel channel = item.channel;
 
             return ResultTile(
               channel: channel,
               onTap: () {
-                onOpenChannel(channel);
+                onOpenChannel(item.feedUrl);
               },
             );
           },

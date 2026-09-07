@@ -1,4 +1,5 @@
 import 'package:bunpod/bunpod.dart';
+import 'package:expressive_loading_indicator/expressive_loading_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:motor/motor.dart';
 
@@ -8,13 +9,20 @@ class ExploreSearchField extends StatelessWidget {
     required this.controller,
     required this.focusNode,
     required this.onChanged,
+    required this.onSubmitted,
     required this.onClear,
+    required this.isLoading,
   });
 
   final TextEditingController controller;
   final FocusNode focusNode;
   final ValueChanged<String> onChanged;
+  final ValueChanged<String> onSubmitted;
   final VoidCallback onClear;
+  final bool isLoading;
+
+  static const EdgeInsets padding = EdgeInsets.all(4);
+  static double get height => kMinInteractiveDimension + padding.vertical;
 
   @override
   Widget build(BuildContext context) {
@@ -38,27 +46,32 @@ class ExploreSearchField extends StatelessWidget {
             tc,
           ),
           shape: RoundedRectangleBorder(
-            borderRadius: .circular(28 - 10 * tc),
+            borderRadius: .circular(height / 2 - 10 * tc),
           ),
           clipBehavior: Clip.antiAlias,
           child: child,
         );
       },
-      child: SizedBox(
-        height: 56,
+      child: Container(
+        height: height,
+        padding: padding,
         child: Row(
           children: [
-            16.gap,
-            Icon(
-              Icons.search_rounded,
-              color: focused ? cs.primary : cs.onSurfaceVariant,
+            4.gap,
+            SizedBox.square(
+              dimension: kMinInteractiveDimension,
+              child: Icon(
+                Icons.search_rounded,
+                color: focused ? cs.primary : cs.onSurfaceVariant,
+              ),
             ),
-            12.gap,
+            4.gap,
             Expanded(
               child: TextField(
                 controller: controller,
                 focusNode: focusNode,
                 onChanged: onChanged,
+                onSubmitted: onSubmitted,
                 textInputAction: TextInputAction.search,
                 style: tt.bodyLarge?.copyWith(color: cs.onSurface),
                 decoration: InputDecoration(
@@ -71,7 +84,12 @@ class ExploreSearchField extends StatelessWidget {
                 ),
               ),
             ),
-            if (controller.text.trim().isNotEmpty)
+            if (isLoading)
+              SizedBox.square(
+                dimension: kMinInteractiveDimension,
+                child: LoadingIndicator(),
+              )
+            else if (controller.text.trim().isNotEmpty)
               IconButton(
                 onPressed: onClear,
                 tooltip: 'Clear search',

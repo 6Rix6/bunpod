@@ -6,8 +6,16 @@ import 'package:path_provider/path_provider.dart';
 part 'app_database.g.dart';
 
 @DriftDatabase(
-  tables: [Feeds, Episodes, SubscribedChannels, PlaybackProgress],
-  daos: [FeedDao, SubscriptionDao, PlaybackDao],
+  tables: [
+    Feeds,
+    Hosts,
+    Episodes,
+    SubscribedChannels,
+    PlaybackProgress,
+    Categories,
+    FeedCategories,
+  ],
+  daos: [FeedDao, HostDao, SubscriptionDao, PlaybackDao, CategoryDao],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());

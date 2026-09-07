@@ -47,6 +47,7 @@ class ChannelPage extends StatelessWidget {
           ),
           ViewFailed(:final error) => _buildWrapper(
             context,
+            // TODO: error screen
             Center(
               child: Text(error?.toString() ?? 'An error occurred.'),
             ),
@@ -145,7 +146,7 @@ class _ChannelPageLoaded extends StatelessWidget {
         backgroundColor: cs.surface,
         body: ExpressiveRefreshIndicator(
           onRefresh: () async {
-            await Future.delayed(const Duration(seconds: 3));
+            await context.read<PodcastFeedCubit>().refresh();
           },
           edgeOffset: topPad + kToolbarHeight,
           color: cs.onPrimaryContainer,

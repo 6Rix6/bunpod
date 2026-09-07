@@ -1,13 +1,11 @@
 import 'package:apple_podcast_api/apple_podcast_api.dart';
 import 'package:bunpod/bunpod.dart';
-import 'package:flutter/material.dart';
 
 extension PodcastFeedMapper on RSSPodcastFeed {
   Future<PodcastFeed?> toPodcastFeed(String url) async {
     if (imageUrl == null) return null;
 
-    final seed =
-        (await getColorsFromNetworkImage(imageUrl!)).firstOrNull ?? Colors.grey;
+    final seed = await ImageColorCache.of(imageUrl!);
 
     final channel = toChannel(seed: seed);
     if (channel == null) return null;
@@ -23,7 +21,7 @@ extension PodcastFeedMapper on RSSPodcastFeed {
   }
 
   Channel? toChannel({
-    required Color seed,
+    required int seed,
   }) {
     if (title == null || ownerName == null || imageUrl == null) {
       return null;
@@ -32,9 +30,10 @@ extension PodcastFeedMapper on RSSPodcastFeed {
     return Channel(
       name: title!,
       host: ownerName!,
-      color: seed.toARGB32(),
+      color: seed,
       image: imageUrl!,
       description: description ?? '',
+      categories: categories,
     );
   }
 }
@@ -43,7 +42,7 @@ extension FeedEpisodeMapper on RSSFeedEpisode {
   /// Converts a [FeedEpisode] to an [Episode].
   /// Returns `null` if any required non-nullable fields are missing.
   Episode? toEpisode({
-    required Color seed,
+    required int seed,
     required Channel channel,
   }) {
     // Check required non-nullable fields.
@@ -60,7 +59,7 @@ extension FeedEpisodeMapper on RSSFeedEpisode {
       host: channel.host,
       title: title!,
       date: publishedAt!.toIso8601String(),
-      color: seed.toARGB32(),
+      color: seed,
       image: channel.image,
       audioUrl: audioUrl!,
       total: duration!,

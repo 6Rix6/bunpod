@@ -1,6 +1,4 @@
 import 'dart:isolate';
-import 'dart:async';
-
 import 'package:apple_podcast_api/apple_podcast_api.dart';
 import 'package:bunpod/bunpod.dart';
 import 'package:dio/dio.dart';
@@ -9,13 +7,25 @@ import 'package:flutter/foundation.dart';
 import 'package:fpdart/fpdart.dart';
 
 abstract interface class RSSPodcastDataSource {
-  Future<AppEither<RSSPodcastFeed>> getFeed(String url);
+  AppTaskEither<RSSPodcastFeed> getFeed(String url);
 }
 
 class RSSPodcastDataSourceImpl implements RSSPodcastDataSource {
-  RSSPodcastDataSourceImpl(this._client, this._feedDao);
+  const RSSPodcastDataSourceImpl({
+    required RSSFeedClient client,
+    required FeedDao feedDao,
+    required CategoryDao categoryDao,
+    required HostDao hostDao,
+  }) : _client = client,
+       _feedDao = feedDao,
+       _categoryDao = categoryDao,
+       _hostDao = hostDao;
+
   final RSSFeedClient _client;
   final FeedDao _feedDao;
+  final HostDao _hostDao;
+
+  final CategoryDao _categoryDao;
 
   static BaseOptions get baseOptions => BaseOptions(
     validateStatus: (status) =>
@@ -23,11 +33,22 @@ class RSSPodcastDataSourceImpl implements RSSPodcastDataSource {
   );
 
   @override
-  Future<AppEither<RSSPodcastFeed>> getFeed(String url) async {
-    final uri = Uri.parse(url);
+  AppTaskEither<RSSPodcastFeed> getFeed(String url) {
+    final uri = Uri.tryParse(url);
 
-    final FeedRow? cached = await _feedDao.getByUrl(url);
+    if (uri == null) {
+      return TaskEither.left(
+        ParseError('Failed to parse url: $url', StackTrace.current),
+      );
+    }
 
+    return TaskEither<AppError, FeedRow?>.tryCatch(
+      () => _feedDao.getByUrl(url),
+      (error, _) => CacheError(error.toString()),
+    ).flatMap((cached) => _constructRequest(uri, cached));
+  }
+
+  AppTaskEither<RSSPodcastFeed> _constructRequest(Uri uri, FeedRow? cached) {
     return TaskEither(
           () => _client.fetchFeedRaw(
             uri,
@@ -38,8 +59,7 @@ class RSSPodcastDataSourceImpl implements RSSPodcastDataSource {
           ),
         )
         .mapLeft(_mapError)
-        .flatMap((response) => _handleResponse(uri, response, cached))
-        .run();
+        .flatMap((response) => _handleResponse(uri, response, cached));
   }
 
   AppTaskEither<RSSPodcastFeed> _handleResponse(
@@ -62,45 +82,59 @@ class RSSPodcastDataSourceImpl implements RSSPodcastDataSource {
       );
     }
 
-    return _parseFeed(url, body).flatMap(
-      (parsed) => _persistOrReuseCache(url, response, parsed, cached),
+    return _calcFeedHash(body).flatMap(
+      (hash) => Option.fromNullable(cached)
+          // Cache hit only if content hash matches the freshly computed one.
+          .filter((c) => c.contentHash == hash)
+          .match(
+            // Miss: parse the new body and persist it.
+            () => _parseFeed(url, body).flatMap(
+              (feed) => _persist(url, response, hash, feed),
+            ),
+            // Hit: reuse cached row, skip parsing/persisting.
+            (c) => _mapFeedRow(c),
+          ),
     );
   }
 
-  AppTaskEither<RSSPodcastFeed> _persistOrReuseCache(
+  AppTaskEither<RSSPodcastFeed> _persist(
     Uri url,
     Response<String> response,
-    ({String hash, RSSPodcastFeed feed}) parsed,
-    FeedRow? cached,
+    String hash,
+    RSSPodcastFeed feed,
   ) {
-    if (cached != null && cached.contentHash == parsed.hash) {
-      return _mapFeedRow(cached);
-    }
-
     return TaskEither.tryCatch(
       () async {
-        final feed = parsed.feed;
         if (!_isValidFeed(feed)) {
           throw ValidationException('Invalid rss feed: $url');
         }
+
+        final hostId = await _hostDao.upsertHost(
+          HostsCompanion.insert(name: feed.ownerName!),
+        );
 
         final feedId = await _feedDao.upsertFeed(
           FeedsCompanion.insert(
             url: url.toString(),
             etag: Value(response.headers.value('etag')),
             lastModified: Value(response.headers.value('last-modified')),
-            contentHash: Value(parsed.hash),
-            title: parsed.feed.title!,
-            host: parsed.feed.ownerName!,
-            imageUrl: parsed.feed.imageUrl!,
-            description: parsed.feed.description ?? '',
+            contentHash: Value(hash),
+            title: feed.title!,
+            hostId: hostId,
+            imageUrl: feed.imageUrl!,
+            description: feed.description ?? '',
             fetchedAt: DateTime.now(),
           ),
         );
 
+        await _categoryDao.attachCategoriesByNameToFeed(
+          feedId,
+          feed.categories,
+        );
+
         await _feedDao.upsertEpisodes(
           feedId,
-          parsed.feed.episodes
+          feed.episodes
               .map(
                 (e) {
                   if (!_isValidEpisode(e)) {
@@ -123,7 +157,7 @@ class RSSPodcastDataSourceImpl implements RSSPodcastDataSource {
               .toList(),
         );
 
-        return parsed.feed;
+        return feed;
       },
       (error, stackTrace) => switch (error) {
         ValidationException e => ParseError(
@@ -149,7 +183,14 @@ class RSSPodcastDataSourceImpl implements RSSPodcastDataSource {
         ep.duration != null);
   }
 
-  AppTaskEither<({String hash, RSSPodcastFeed feed})> _parseFeed(
+  AppTaskEither<String> _calcFeedHash(String body) {
+    return TaskEither.tryCatch(
+      () => Isolate.run(() => RSSFeedClient.calcFeedHash(body)),
+      (error, stackTrace) => ParseError(error, stackTrace),
+    );
+  }
+
+  AppTaskEither<RSSPodcastFeed> _parseFeed(
     Uri url,
     String body,
   ) {
@@ -157,7 +198,7 @@ class RSSPodcastDataSourceImpl implements RSSPodcastDataSource {
       logarte.log('Parsing rss feed: $url');
     }
     return TaskEither.tryCatch(
-      () => Isolate.run(() => RSSFeedClient.parseFeedWithHash((url, body))),
+      () => Isolate.run(() => RSSFeedClient.parseFeed((url, body))),
       (error, stackTrace) => ParseError(error, stackTrace),
     );
   }
@@ -178,18 +219,24 @@ class RSSPodcastDataSourceImpl implements RSSPodcastDataSource {
 
   AppTaskEither<RSSPodcastFeed> _mapFeedRow(FeedRow row) {
     return TaskEither.tryCatch(() async {
+      final host = await _hostDao.getById(row.hostId);
+
       final epRows = await _feedDao.getEpisodesByFeedId(row.id);
       final episodes = epRows.map(_mapEpisodeRow).toList();
+
+      final categoryRows = await _categoryDao.getCategoriesForFeed(row.id);
+      final categories = categoryRows.map((c) => c.name).toList();
 
       return RSSPodcastFeed(
         url: Uri.tryParse(row.url),
         title: row.title,
-        ownerName: row.host,
+        ownerName: host.name,
         imageUrl: row.imageUrl,
         description: row.description,
         episodes: episodes,
+        categories: categories,
       );
-    }, (error, stackTrace) => CacheError(error.toString()));
+    }, (error, _) => CacheError(error.toString()));
   }
 
   RSSFeedEpisode _mapEpisodeRow(EpisodeRow row) {

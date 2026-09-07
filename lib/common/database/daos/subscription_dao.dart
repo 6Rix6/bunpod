@@ -89,6 +89,22 @@ class SubscriptionDao extends DatabaseAccessor<AppDatabase>
     return row?.read(subscribedChannels.sortOrder.max()) ?? 0;
   }
 
+  Future<List<SubscribedChannelWithFeed>> getSubscribedChannels() async {
+    final query = select(subscribedChannels).join([
+      innerJoin(feeds, feeds.id.equalsExp(subscribedChannels.feedId)),
+    ])..orderBy([OrderingTerm.asc(subscribedChannels.sortOrder)]);
+
+    final rows = await query.get();
+    return rows
+        .map(
+          (row) => (
+            subscription: row.readTable(subscribedChannels),
+            feed: row.readTable(feeds),
+          ),
+        )
+        .toList();
+  }
+
   Stream<List<SubscribedChannelWithFeed>> watchSubscribedChannels() {
     final query = select(subscribedChannels).join([
       innerJoin(feeds, feeds.id.equalsExp(subscribedChannels.feedId)),

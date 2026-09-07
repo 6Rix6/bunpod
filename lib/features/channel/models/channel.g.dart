@@ -12,6 +12,11 @@ _Channel _$ChannelFromJson(Map<String, dynamic> json) => _Channel(
   color: (json['color'] as num).toInt(),
   image: json['image'] as String,
   description: json['description'] as String,
+  categories:
+      (json['categories'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList() ??
+      const [],
 );
 
 Map<String, dynamic> _$ChannelToJson(_Channel instance) => <String, dynamic>{
@@ -20,4 +25,5 @@ Map<String, dynamic> _$ChannelToJson(_Channel instance) => <String, dynamic>{
   'color': instance.color,
   'image': instance.image,
   'description': instance.description,
+  'categories': instance.categories,
 };

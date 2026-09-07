@@ -1,14 +1,19 @@
 import 'package:bunpod/bunpod.dart';
+import 'package:fpdart/fpdart.dart';
 
 abstract interface class SubscriptionRepository {
   Stream<bool> watchIsSubscribed(String url);
-  Future<bool> isSubscribed(String url);
-  Future<void> subscribe(String url);
-  Future<void> unsubscribe(String url);
+  AppTaskEither<bool> isSubscribed(String url);
+  AppTaskEither<void> subscribe(String url);
+  AppTaskEither<void> unsubscribe(String url);
+}
+
+abstract interface class SubscribedChannelsRepository {
+  AppTaskEither<List<String>> getFeedUrls();
 }
 
 class SubscriptionRepositoryImpl implements SubscriptionRepository {
-  SubscriptionRepositoryImpl(this._dao);
+  const SubscriptionRepositoryImpl(this._dao);
 
   final SubscriptionDao _dao;
 
@@ -18,17 +23,39 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
   }
 
   @override
-  Future<bool> isSubscribed(String url) {
-    return _dao.isSubscribedByUrl(url);
+  AppTaskEither<bool> isSubscribed(String url) {
+    return TaskEither.tryCatch(
+      () => _dao.isSubscribedByUrl(url),
+      (error, stackTrace) => CacheError(error.toString()),
+    );
   }
 
   @override
-  Future<void> subscribe(String url) {
-    return _dao.subscribeByUrl(url);
+  AppTaskEither<void> subscribe(String url) {
+    return TaskEither.tryCatch(
+      () => _dao.subscribeByUrl(url),
+      (error, stackTrace) => CacheError(error.toString()),
+    );
   }
 
   @override
-  Future<void> unsubscribe(String url) {
-    return _dao.unsubscribeByUrl(url);
+  AppTaskEither<void> unsubscribe(String url) {
+    return TaskEither.tryCatch(
+      () => _dao.unsubscribeByUrl(url),
+      (error, stackTrace) => CacheError(error.toString()),
+    );
+  }
+}
+
+class SubscribedChannelsRepositoryImpl implements SubscribedChannelsRepository {
+  const SubscribedChannelsRepositoryImpl(this._dao);
+  final SubscriptionDao _dao;
+
+  @override
+  AppTaskEither<List<String>> getFeedUrls() {
+    return TaskEither.tryCatch(() async {
+      final rows = await _dao.getSubscribedChannels();
+      return rows.map((row) => row.feed.url).toList();
+    }, (error, _) => AppError.cache(error.toString()));
   }
 }

@@ -1,6 +1,40 @@
 import 'package:bunpod/bunpod.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:motor/motor.dart';
+
+class CategoryCardForId extends StatelessWidget {
+  const CategoryCardForId({
+    super.key,
+    required this.id,
+    required this.first,
+    required this.last,
+    required this.onTap,
+  });
+
+  final int id;
+  final bool first;
+  final bool last;
+  final ValueChanged<ExploreCategory> onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => ExploreCategoryCubit(locator(), categoryId: id),
+      child: BlocBuilder<ExploreCategoryCubit, ViewState<ExploreCategory>>(
+        builder: (context, state) => switch (state) {
+          _ when state.dataOrNull != null => CategoryCard(
+            category: state.dataOrNull!,
+            first: first,
+            last: last,
+            onTap: () => onTap(state.dataOrNull!),
+          ),
+          _ => SizedBox.shrink(),
+        },
+      ),
+    );
+  }
+}
 
 class CategoryCard extends StatefulWidget {
   const CategoryCard({

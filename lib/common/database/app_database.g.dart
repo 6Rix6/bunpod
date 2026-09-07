@@ -3,6 +3,191 @@
 part of 'app_database.dart';
 
 // ignore_for_file: type=lint
+class $HostsTable extends Hosts with TableInfo<$HostsTable, HostRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $HostsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, name];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'hosts';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<HostRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  HostRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return HostRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+    );
+  }
+
+  @override
+  $HostsTable createAlias(String alias) {
+    return $HostsTable(attachedDatabase, alias);
+  }
+}
+
+class HostRow extends DataClass implements Insertable<HostRow> {
+  final int id;
+  final String name;
+  const HostRow({required this.id, required this.name});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['name'] = Variable<String>(name);
+    return map;
+  }
+
+  HostsCompanion toCompanion(bool nullToAbsent) {
+    return HostsCompanion(id: Value(id), name: Value(name));
+  }
+
+  factory HostRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return HostRow(
+      id: serializer.fromJson<int>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'name': serializer.toJson<String>(name),
+    };
+  }
+
+  HostRow copyWith({int? id, String? name}) =>
+      HostRow(id: id ?? this.id, name: name ?? this.name);
+  HostRow copyWithCompanion(HostsCompanion data) {
+    return HostRow(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('HostRow(')
+          ..write('id: $id, ')
+          ..write('name: $name')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, name);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is HostRow && other.id == this.id && other.name == this.name);
+}
+
+class HostsCompanion extends UpdateCompanion<HostRow> {
+  final Value<int> id;
+  final Value<String> name;
+  const HostsCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+  });
+  HostsCompanion.insert({this.id = const Value.absent(), required String name})
+    : name = Value(name);
+  static Insertable<HostRow> custom({
+    Expression<int>? id,
+    Expression<String>? name,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+    });
+  }
+
+  HostsCompanion copyWith({Value<int>? id, Value<String>? name}) {
+    return HostsCompanion(id: id ?? this.id, name: name ?? this.name);
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('HostsCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $FeedsTable extends Feeds with TableInfo<$FeedsTable, FeedRow> {
   @override
   final GeneratedDatabase attachedDatabase;
@@ -71,14 +256,17 @@ class $FeedsTable extends Feeds with TableInfo<$FeedsTable, FeedRow> {
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _hostMeta = const VerificationMeta('host');
+  static const VerificationMeta _hostIdMeta = const VerificationMeta('hostId');
   @override
-  late final GeneratedColumn<String> host = GeneratedColumn<String>(
-    'host',
+  late final GeneratedColumn<int> hostId = GeneratedColumn<int>(
+    'host_id',
     aliasedName,
     false,
-    type: DriftSqlType.string,
+    type: DriftSqlType.int,
     requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES hosts (id)',
+    ),
   );
   static const VerificationMeta _imageUrlMeta = const VerificationMeta(
     'imageUrl',
@@ -121,7 +309,7 @@ class $FeedsTable extends Feeds with TableInfo<$FeedsTable, FeedRow> {
     lastModified,
     contentHash,
     title,
-    host,
+    hostId,
     imageUrl,
     description,
     fetchedAt,
@@ -181,13 +369,13 @@ class $FeedsTable extends Feeds with TableInfo<$FeedsTable, FeedRow> {
     } else if (isInserting) {
       context.missing(_titleMeta);
     }
-    if (data.containsKey('host')) {
+    if (data.containsKey('host_id')) {
       context.handle(
-        _hostMeta,
-        host.isAcceptableOrUnknown(data['host']!, _hostMeta),
+        _hostIdMeta,
+        hostId.isAcceptableOrUnknown(data['host_id']!, _hostIdMeta),
       );
     } else if (isInserting) {
-      context.missing(_hostMeta);
+      context.missing(_hostIdMeta);
     }
     if (data.containsKey('image_url')) {
       context.handle(
@@ -249,9 +437,9 @@ class $FeedsTable extends Feeds with TableInfo<$FeedsTable, FeedRow> {
         DriftSqlType.string,
         data['${effectivePrefix}title'],
       )!,
-      host: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}host'],
+      hostId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}host_id'],
       )!,
       imageUrl: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
@@ -281,7 +469,7 @@ class FeedRow extends DataClass implements Insertable<FeedRow> {
   final String? lastModified;
   final String? contentHash;
   final String title;
-  final String host;
+  final int hostId;
   final String imageUrl;
   final String description;
   final DateTime fetchedAt;
@@ -292,7 +480,7 @@ class FeedRow extends DataClass implements Insertable<FeedRow> {
     this.lastModified,
     this.contentHash,
     required this.title,
-    required this.host,
+    required this.hostId,
     required this.imageUrl,
     required this.description,
     required this.fetchedAt,
@@ -312,7 +500,7 @@ class FeedRow extends DataClass implements Insertable<FeedRow> {
       map['content_hash'] = Variable<String>(contentHash);
     }
     map['title'] = Variable<String>(title);
-    map['host'] = Variable<String>(host);
+    map['host_id'] = Variable<int>(hostId);
     map['image_url'] = Variable<String>(imageUrl);
     map['description'] = Variable<String>(description);
     map['fetched_at'] = Variable<DateTime>(fetchedAt);
@@ -331,7 +519,7 @@ class FeedRow extends DataClass implements Insertable<FeedRow> {
           ? const Value.absent()
           : Value(contentHash),
       title: Value(title),
-      host: Value(host),
+      hostId: Value(hostId),
       imageUrl: Value(imageUrl),
       description: Value(description),
       fetchedAt: Value(fetchedAt),
@@ -350,7 +538,7 @@ class FeedRow extends DataClass implements Insertable<FeedRow> {
       lastModified: serializer.fromJson<String?>(json['lastModified']),
       contentHash: serializer.fromJson<String?>(json['contentHash']),
       title: serializer.fromJson<String>(json['title']),
-      host: serializer.fromJson<String>(json['host']),
+      hostId: serializer.fromJson<int>(json['hostId']),
       imageUrl: serializer.fromJson<String>(json['imageUrl']),
       description: serializer.fromJson<String>(json['description']),
       fetchedAt: serializer.fromJson<DateTime>(json['fetchedAt']),
@@ -366,7 +554,7 @@ class FeedRow extends DataClass implements Insertable<FeedRow> {
       'lastModified': serializer.toJson<String?>(lastModified),
       'contentHash': serializer.toJson<String?>(contentHash),
       'title': serializer.toJson<String>(title),
-      'host': serializer.toJson<String>(host),
+      'hostId': serializer.toJson<int>(hostId),
       'imageUrl': serializer.toJson<String>(imageUrl),
       'description': serializer.toJson<String>(description),
       'fetchedAt': serializer.toJson<DateTime>(fetchedAt),
@@ -380,7 +568,7 @@ class FeedRow extends DataClass implements Insertable<FeedRow> {
     Value<String?> lastModified = const Value.absent(),
     Value<String?> contentHash = const Value.absent(),
     String? title,
-    String? host,
+    int? hostId,
     String? imageUrl,
     String? description,
     DateTime? fetchedAt,
@@ -391,7 +579,7 @@ class FeedRow extends DataClass implements Insertable<FeedRow> {
     lastModified: lastModified.present ? lastModified.value : this.lastModified,
     contentHash: contentHash.present ? contentHash.value : this.contentHash,
     title: title ?? this.title,
-    host: host ?? this.host,
+    hostId: hostId ?? this.hostId,
     imageUrl: imageUrl ?? this.imageUrl,
     description: description ?? this.description,
     fetchedAt: fetchedAt ?? this.fetchedAt,
@@ -408,7 +596,7 @@ class FeedRow extends DataClass implements Insertable<FeedRow> {
           ? data.contentHash.value
           : this.contentHash,
       title: data.title.present ? data.title.value : this.title,
-      host: data.host.present ? data.host.value : this.host,
+      hostId: data.hostId.present ? data.hostId.value : this.hostId,
       imageUrl: data.imageUrl.present ? data.imageUrl.value : this.imageUrl,
       description: data.description.present
           ? data.description.value
@@ -426,7 +614,7 @@ class FeedRow extends DataClass implements Insertable<FeedRow> {
           ..write('lastModified: $lastModified, ')
           ..write('contentHash: $contentHash, ')
           ..write('title: $title, ')
-          ..write('host: $host, ')
+          ..write('hostId: $hostId, ')
           ..write('imageUrl: $imageUrl, ')
           ..write('description: $description, ')
           ..write('fetchedAt: $fetchedAt')
@@ -442,7 +630,7 @@ class FeedRow extends DataClass implements Insertable<FeedRow> {
     lastModified,
     contentHash,
     title,
-    host,
+    hostId,
     imageUrl,
     description,
     fetchedAt,
@@ -457,7 +645,7 @@ class FeedRow extends DataClass implements Insertable<FeedRow> {
           other.lastModified == this.lastModified &&
           other.contentHash == this.contentHash &&
           other.title == this.title &&
-          other.host == this.host &&
+          other.hostId == this.hostId &&
           other.imageUrl == this.imageUrl &&
           other.description == this.description &&
           other.fetchedAt == this.fetchedAt);
@@ -470,7 +658,7 @@ class FeedsCompanion extends UpdateCompanion<FeedRow> {
   final Value<String?> lastModified;
   final Value<String?> contentHash;
   final Value<String> title;
-  final Value<String> host;
+  final Value<int> hostId;
   final Value<String> imageUrl;
   final Value<String> description;
   final Value<DateTime> fetchedAt;
@@ -481,7 +669,7 @@ class FeedsCompanion extends UpdateCompanion<FeedRow> {
     this.lastModified = const Value.absent(),
     this.contentHash = const Value.absent(),
     this.title = const Value.absent(),
-    this.host = const Value.absent(),
+    this.hostId = const Value.absent(),
     this.imageUrl = const Value.absent(),
     this.description = const Value.absent(),
     this.fetchedAt = const Value.absent(),
@@ -493,13 +681,13 @@ class FeedsCompanion extends UpdateCompanion<FeedRow> {
     this.lastModified = const Value.absent(),
     this.contentHash = const Value.absent(),
     required String title,
-    required String host,
+    required int hostId,
     required String imageUrl,
     required String description,
     required DateTime fetchedAt,
   }) : url = Value(url),
        title = Value(title),
-       host = Value(host),
+       hostId = Value(hostId),
        imageUrl = Value(imageUrl),
        description = Value(description),
        fetchedAt = Value(fetchedAt);
@@ -510,7 +698,7 @@ class FeedsCompanion extends UpdateCompanion<FeedRow> {
     Expression<String>? lastModified,
     Expression<String>? contentHash,
     Expression<String>? title,
-    Expression<String>? host,
+    Expression<int>? hostId,
     Expression<String>? imageUrl,
     Expression<String>? description,
     Expression<DateTime>? fetchedAt,
@@ -522,7 +710,7 @@ class FeedsCompanion extends UpdateCompanion<FeedRow> {
       if (lastModified != null) 'last_modified': lastModified,
       if (contentHash != null) 'content_hash': contentHash,
       if (title != null) 'title': title,
-      if (host != null) 'host': host,
+      if (hostId != null) 'host_id': hostId,
       if (imageUrl != null) 'image_url': imageUrl,
       if (description != null) 'description': description,
       if (fetchedAt != null) 'fetched_at': fetchedAt,
@@ -536,7 +724,7 @@ class FeedsCompanion extends UpdateCompanion<FeedRow> {
     Value<String?>? lastModified,
     Value<String?>? contentHash,
     Value<String>? title,
-    Value<String>? host,
+    Value<int>? hostId,
     Value<String>? imageUrl,
     Value<String>? description,
     Value<DateTime>? fetchedAt,
@@ -548,7 +736,7 @@ class FeedsCompanion extends UpdateCompanion<FeedRow> {
       lastModified: lastModified ?? this.lastModified,
       contentHash: contentHash ?? this.contentHash,
       title: title ?? this.title,
-      host: host ?? this.host,
+      hostId: hostId ?? this.hostId,
       imageUrl: imageUrl ?? this.imageUrl,
       description: description ?? this.description,
       fetchedAt: fetchedAt ?? this.fetchedAt,
@@ -576,8 +764,8 @@ class FeedsCompanion extends UpdateCompanion<FeedRow> {
     if (title.present) {
       map['title'] = Variable<String>(title.value);
     }
-    if (host.present) {
-      map['host'] = Variable<String>(host.value);
+    if (hostId.present) {
+      map['host_id'] = Variable<int>(hostId.value);
     }
     if (imageUrl.present) {
       map['image_url'] = Variable<String>(imageUrl.value);
@@ -600,7 +788,7 @@ class FeedsCompanion extends UpdateCompanion<FeedRow> {
           ..write('lastModified: $lastModified, ')
           ..write('contentHash: $contentHash, ')
           ..write('title: $title, ')
-          ..write('host: $host, ')
+          ..write('hostId: $hostId, ')
           ..write('imageUrl: $imageUrl, ')
           ..write('description: $description, ')
           ..write('fetchedAt: $fetchedAt')
@@ -1747,9 +1935,421 @@ class PlaybackProgressCompanion extends UpdateCompanion<PlaybackProgressRow> {
   }
 }
 
+class $CategoriesTable extends Categories
+    with TableInfo<$CategoriesTable, CategoryRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CategoriesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, name];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'categories';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<CategoryRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  CategoryRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CategoryRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+    );
+  }
+
+  @override
+  $CategoriesTable createAlias(String alias) {
+    return $CategoriesTable(attachedDatabase, alias);
+  }
+}
+
+class CategoryRow extends DataClass implements Insertable<CategoryRow> {
+  final int id;
+  final String name;
+  const CategoryRow({required this.id, required this.name});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['name'] = Variable<String>(name);
+    return map;
+  }
+
+  CategoriesCompanion toCompanion(bool nullToAbsent) {
+    return CategoriesCompanion(id: Value(id), name: Value(name));
+  }
+
+  factory CategoryRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CategoryRow(
+      id: serializer.fromJson<int>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'name': serializer.toJson<String>(name),
+    };
+  }
+
+  CategoryRow copyWith({int? id, String? name}) =>
+      CategoryRow(id: id ?? this.id, name: name ?? this.name);
+  CategoryRow copyWithCompanion(CategoriesCompanion data) {
+    return CategoryRow(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CategoryRow(')
+          ..write('id: $id, ')
+          ..write('name: $name')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, name);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CategoryRow && other.id == this.id && other.name == this.name);
+}
+
+class CategoriesCompanion extends UpdateCompanion<CategoryRow> {
+  final Value<int> id;
+  final Value<String> name;
+  const CategoriesCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+  });
+  CategoriesCompanion.insert({
+    this.id = const Value.absent(),
+    required String name,
+  }) : name = Value(name);
+  static Insertable<CategoryRow> custom({
+    Expression<int>? id,
+    Expression<String>? name,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+    });
+  }
+
+  CategoriesCompanion copyWith({Value<int>? id, Value<String>? name}) {
+    return CategoriesCompanion(id: id ?? this.id, name: name ?? this.name);
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CategoriesCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $FeedCategoriesTable extends FeedCategories
+    with TableInfo<$FeedCategoriesTable, FeedCategoryRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $FeedCategoriesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _feedIdMeta = const VerificationMeta('feedId');
+  @override
+  late final GeneratedColumn<int> feedId = GeneratedColumn<int>(
+    'feed_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES feeds (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _categoryIdMeta = const VerificationMeta(
+    'categoryId',
+  );
+  @override
+  late final GeneratedColumn<int> categoryId = GeneratedColumn<int>(
+    'category_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES categories (id) ON DELETE CASCADE',
+    ),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [feedId, categoryId];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'feed_categories';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<FeedCategoryRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('feed_id')) {
+      context.handle(
+        _feedIdMeta,
+        feedId.isAcceptableOrUnknown(data['feed_id']!, _feedIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_feedIdMeta);
+    }
+    if (data.containsKey('category_id')) {
+      context.handle(
+        _categoryIdMeta,
+        categoryId.isAcceptableOrUnknown(data['category_id']!, _categoryIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_categoryIdMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {feedId, categoryId};
+  @override
+  FeedCategoryRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FeedCategoryRow(
+      feedId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}feed_id'],
+      )!,
+      categoryId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}category_id'],
+      )!,
+    );
+  }
+
+  @override
+  $FeedCategoriesTable createAlias(String alias) {
+    return $FeedCategoriesTable(attachedDatabase, alias);
+  }
+}
+
+class FeedCategoryRow extends DataClass implements Insertable<FeedCategoryRow> {
+  final int feedId;
+  final int categoryId;
+  const FeedCategoryRow({required this.feedId, required this.categoryId});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['feed_id'] = Variable<int>(feedId);
+    map['category_id'] = Variable<int>(categoryId);
+    return map;
+  }
+
+  FeedCategoriesCompanion toCompanion(bool nullToAbsent) {
+    return FeedCategoriesCompanion(
+      feedId: Value(feedId),
+      categoryId: Value(categoryId),
+    );
+  }
+
+  factory FeedCategoryRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FeedCategoryRow(
+      feedId: serializer.fromJson<int>(json['feedId']),
+      categoryId: serializer.fromJson<int>(json['categoryId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'feedId': serializer.toJson<int>(feedId),
+      'categoryId': serializer.toJson<int>(categoryId),
+    };
+  }
+
+  FeedCategoryRow copyWith({int? feedId, int? categoryId}) => FeedCategoryRow(
+    feedId: feedId ?? this.feedId,
+    categoryId: categoryId ?? this.categoryId,
+  );
+  FeedCategoryRow copyWithCompanion(FeedCategoriesCompanion data) {
+    return FeedCategoryRow(
+      feedId: data.feedId.present ? data.feedId.value : this.feedId,
+      categoryId: data.categoryId.present
+          ? data.categoryId.value
+          : this.categoryId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FeedCategoryRow(')
+          ..write('feedId: $feedId, ')
+          ..write('categoryId: $categoryId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(feedId, categoryId);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FeedCategoryRow &&
+          other.feedId == this.feedId &&
+          other.categoryId == this.categoryId);
+}
+
+class FeedCategoriesCompanion extends UpdateCompanion<FeedCategoryRow> {
+  final Value<int> feedId;
+  final Value<int> categoryId;
+  final Value<int> rowid;
+  const FeedCategoriesCompanion({
+    this.feedId = const Value.absent(),
+    this.categoryId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  FeedCategoriesCompanion.insert({
+    required int feedId,
+    required int categoryId,
+    this.rowid = const Value.absent(),
+  }) : feedId = Value(feedId),
+       categoryId = Value(categoryId);
+  static Insertable<FeedCategoryRow> custom({
+    Expression<int>? feedId,
+    Expression<int>? categoryId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (feedId != null) 'feed_id': feedId,
+      if (categoryId != null) 'category_id': categoryId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  FeedCategoriesCompanion copyWith({
+    Value<int>? feedId,
+    Value<int>? categoryId,
+    Value<int>? rowid,
+  }) {
+    return FeedCategoriesCompanion(
+      feedId: feedId ?? this.feedId,
+      categoryId: categoryId ?? this.categoryId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (feedId.present) {
+      map['feed_id'] = Variable<int>(feedId.value);
+    }
+    if (categoryId.present) {
+      map['category_id'] = Variable<int>(categoryId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FeedCategoriesCompanion(')
+          ..write('feedId: $feedId, ')
+          ..write('categoryId: $categoryId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
+  late final $HostsTable hosts = $HostsTable(this);
   late final $FeedsTable feeds = $FeedsTable(this);
   late final $EpisodesTable episodes = $EpisodesTable(this);
   late final $SubscribedChannelsTable subscribedChannels =
@@ -1757,23 +2357,262 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $PlaybackProgressTable playbackProgress = $PlaybackProgressTable(
     this,
   );
+  late final $CategoriesTable categories = $CategoriesTable(this);
+  late final $FeedCategoriesTable feedCategories = $FeedCategoriesTable(this);
   late final FeedDao feedDao = FeedDao(this as AppDatabase);
+  late final HostDao hostDao = HostDao(this as AppDatabase);
   late final SubscriptionDao subscriptionDao = SubscriptionDao(
     this as AppDatabase,
   );
   late final PlaybackDao playbackDao = PlaybackDao(this as AppDatabase);
+  late final CategoryDao categoryDao = CategoryDao(this as AppDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities => [
+    hosts,
     feeds,
     episodes,
     subscribedChannels,
     playbackProgress,
+    categories,
+    feedCategories,
   ];
+  @override
+  StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'feeds',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('feed_categories', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'categories',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('feed_categories', kind: UpdateKind.delete)],
+    ),
+  ]);
 }
 
+typedef $$HostsTableCreateCompanionBuilder =
+    HostsCompanion Function({Value<int> id, required String name});
+typedef $$HostsTableUpdateCompanionBuilder =
+    HostsCompanion Function({Value<int> id, Value<String> name});
+
+final class $$HostsTableReferences
+    extends BaseReferences<_$AppDatabase, $HostsTable, HostRow> {
+  $$HostsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$FeedsTable, List<FeedRow>> _feedsRefsTable(
+    _$AppDatabase db,
+  ) => MultiTypedResultKey.fromTable(
+    db.feeds,
+    aliasName: 'hosts__id__feeds__host_id',
+  );
+
+  $$FeedsTableProcessedTableManager get feedsRefs {
+    final manager = $$FeedsTableTableManager(
+      $_db,
+      $_db.feeds,
+    ).filter((f) => f.hostId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_feedsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $$HostsTableFilterComposer extends Composer<_$AppDatabase, $HostsTable> {
+  $$HostsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  Expression<bool> feedsRefs(
+    Expression<bool> Function($$FeedsTableFilterComposer f) f,
+  ) {
+    final $$FeedsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.feeds,
+      getReferencedColumn: (t) => t.hostId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$FeedsTableFilterComposer(
+            $db: $db,
+            $table: $db.feeds,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$HostsTableOrderingComposer
+    extends Composer<_$AppDatabase, $HostsTable> {
+  $$HostsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$HostsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $HostsTable> {
+  $$HostsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  Expression<T> feedsRefs<T extends Object>(
+    Expression<T> Function($$FeedsTableAnnotationComposer a) f,
+  ) {
+    final $$FeedsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.feeds,
+      getReferencedColumn: (t) => t.hostId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$FeedsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.feeds,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$HostsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $HostsTable,
+          HostRow,
+          $$HostsTableFilterComposer,
+          $$HostsTableOrderingComposer,
+          $$HostsTableAnnotationComposer,
+          $$HostsTableCreateCompanionBuilder,
+          $$HostsTableUpdateCompanionBuilder,
+          (HostRow, $$HostsTableReferences),
+          HostRow,
+          PrefetchHooks Function({bool feedsRefs})
+        > {
+  $$HostsTableTableManager(_$AppDatabase db, $HostsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$HostsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$HostsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$HostsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+              }) => HostsCompanion(id: id, name: name),
+          createCompanionCallback:
+              ({Value<int> id = const Value.absent(), required String name}) =>
+                  HostsCompanion.insert(id: id, name: name),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) =>
+                    (e.readTable(table), $$HostsTableReferences(db, table, e)),
+              )
+              .toList(),
+          prefetchHooksCallback: ({feedsRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [if (feedsRefs) db.feeds],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (feedsRefs)
+                    await $_getPrefetchedData<HostRow, $HostsTable, FeedRow>(
+                      currentTable: table,
+                      referencedTable: $$HostsTableReferences._feedsRefsTable(
+                        db,
+                      ),
+                      managerFromTypedResult: (p0) =>
+                          $$HostsTableReferences(db, table, p0).feedsRefs,
+                      referencedItemsForCurrentItem: (item, referencedItems) =>
+                          referencedItems.where((e) => e.hostId == item.id),
+                      typedResults: items,
+                    ),
+                ];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$HostsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $HostsTable,
+      HostRow,
+      $$HostsTableFilterComposer,
+      $$HostsTableOrderingComposer,
+      $$HostsTableAnnotationComposer,
+      $$HostsTableCreateCompanionBuilder,
+      $$HostsTableUpdateCompanionBuilder,
+      (HostRow, $$HostsTableReferences),
+      HostRow,
+      PrefetchHooks Function({bool feedsRefs})
+    >;
 typedef $$FeedsTableCreateCompanionBuilder =
     FeedsCompanion Function({
       Value<int> id,
@@ -1782,7 +2621,7 @@ typedef $$FeedsTableCreateCompanionBuilder =
       Value<String?> lastModified,
       Value<String?> contentHash,
       required String title,
-      required String host,
+      required int hostId,
       required String imageUrl,
       required String description,
       required DateTime fetchedAt,
@@ -1795,7 +2634,7 @@ typedef $$FeedsTableUpdateCompanionBuilder =
       Value<String?> lastModified,
       Value<String?> contentHash,
       Value<String> title,
-      Value<String> host,
+      Value<int> hostId,
       Value<String> imageUrl,
       Value<String> description,
       Value<DateTime> fetchedAt,
@@ -1804,6 +2643,23 @@ typedef $$FeedsTableUpdateCompanionBuilder =
 final class $$FeedsTableReferences
     extends BaseReferences<_$AppDatabase, $FeedsTable, FeedRow> {
   $$FeedsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $HostsTable _hostIdTable(_$AppDatabase db) =>
+      db.hosts.createAlias('feeds__host_id__hosts__id');
+
+  $$HostsTableProcessedTableManager get hostId {
+    final $_column = $_itemColumn<int>('host_id')!;
+
+    final manager = $$HostsTableTableManager(
+      $_db,
+      $_db.hosts,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_hostIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
 
   static MultiTypedResultKey<$EpisodesTable, List<EpisodeRow>>
   _episodesRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
@@ -1842,6 +2698,24 @@ final class $$FeedsTableReferences
     final cache = $_typedResult.readTableOrNull(
       _subscribedChannelsRefsTable($_db),
     );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$FeedCategoriesTable, List<FeedCategoryRow>>
+  _feedCategoriesRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.feedCategories,
+    aliasName: 'feeds__id__feed_categories__feed_id',
+  );
+
+  $$FeedCategoriesTableProcessedTableManager get feedCategoriesRefs {
+    final manager = $$FeedCategoriesTableTableManager(
+      $_db,
+      $_db.feedCategories,
+    ).filter((f) => f.feedId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_feedCategoriesRefsTable($_db));
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -1886,11 +2760,6 @@ class $$FeedsTableFilterComposer extends Composer<_$AppDatabase, $FeedsTable> {
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get host => $composableBuilder(
-    column: $table.host,
-    builder: (column) => ColumnFilters(column),
-  );
-
   ColumnFilters<String> get imageUrl => $composableBuilder(
     column: $table.imageUrl,
     builder: (column) => ColumnFilters(column),
@@ -1905,6 +2774,29 @@ class $$FeedsTableFilterComposer extends Composer<_$AppDatabase, $FeedsTable> {
     column: $table.fetchedAt,
     builder: (column) => ColumnFilters(column),
   );
+
+  $$HostsTableFilterComposer get hostId {
+    final $$HostsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.hostId,
+      referencedTable: $db.hosts,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$HostsTableFilterComposer(
+            $db: $db,
+            $table: $db.hosts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
 
   Expression<bool> episodesRefs(
     Expression<bool> Function($$EpisodesTableFilterComposer f) f,
@@ -1955,6 +2847,31 @@ class $$FeedsTableFilterComposer extends Composer<_$AppDatabase, $FeedsTable> {
     );
     return f(composer);
   }
+
+  Expression<bool> feedCategoriesRefs(
+    Expression<bool> Function($$FeedCategoriesTableFilterComposer f) f,
+  ) {
+    final $$FeedCategoriesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.feedCategories,
+      getReferencedColumn: (t) => t.feedId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$FeedCategoriesTableFilterComposer(
+            $db: $db,
+            $table: $db.feedCategories,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$FeedsTableOrderingComposer
@@ -1996,11 +2913,6 @@ class $$FeedsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get host => $composableBuilder(
-    column: $table.host,
-    builder: (column) => ColumnOrderings(column),
-  );
-
   ColumnOrderings<String> get imageUrl => $composableBuilder(
     column: $table.imageUrl,
     builder: (column) => ColumnOrderings(column),
@@ -2015,6 +2927,29 @@ class $$FeedsTableOrderingComposer
     column: $table.fetchedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  $$HostsTableOrderingComposer get hostId {
+    final $$HostsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.hostId,
+      referencedTable: $db.hosts,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$HostsTableOrderingComposer(
+            $db: $db,
+            $table: $db.hosts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
 }
 
 class $$FeedsTableAnnotationComposer
@@ -2048,9 +2983,6 @@ class $$FeedsTableAnnotationComposer
   GeneratedColumn<String> get title =>
       $composableBuilder(column: $table.title, builder: (column) => column);
 
-  GeneratedColumn<String> get host =>
-      $composableBuilder(column: $table.host, builder: (column) => column);
-
   GeneratedColumn<String> get imageUrl =>
       $composableBuilder(column: $table.imageUrl, builder: (column) => column);
 
@@ -2061,6 +2993,29 @@ class $$FeedsTableAnnotationComposer
 
   GeneratedColumn<DateTime> get fetchedAt =>
       $composableBuilder(column: $table.fetchedAt, builder: (column) => column);
+
+  $$HostsTableAnnotationComposer get hostId {
+    final $$HostsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.hostId,
+      referencedTable: $db.hosts,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$HostsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.hosts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
 
   Expression<T> episodesRefs<T extends Object>(
     Expression<T> Function($$EpisodesTableAnnotationComposer a) f,
@@ -2112,6 +3067,31 @@ class $$FeedsTableAnnotationComposer
         );
     return f(composer);
   }
+
+  Expression<T> feedCategoriesRefs<T extends Object>(
+    Expression<T> Function($$FeedCategoriesTableAnnotationComposer a) f,
+  ) {
+    final $$FeedCategoriesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.feedCategories,
+      getReferencedColumn: (t) => t.feedId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$FeedCategoriesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.feedCategories,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$FeedsTableTableManager
@@ -2128,8 +3108,10 @@ class $$FeedsTableTableManager
           (FeedRow, $$FeedsTableReferences),
           FeedRow,
           PrefetchHooks Function({
+            bool hostId,
             bool episodesRefs,
             bool subscribedChannelsRefs,
+            bool feedCategoriesRefs,
           })
         > {
   $$FeedsTableTableManager(_$AppDatabase db, $FeedsTable table)
@@ -2151,7 +3133,7 @@ class $$FeedsTableTableManager
                 Value<String?> lastModified = const Value.absent(),
                 Value<String?> contentHash = const Value.absent(),
                 Value<String> title = const Value.absent(),
-                Value<String> host = const Value.absent(),
+                Value<int> hostId = const Value.absent(),
                 Value<String> imageUrl = const Value.absent(),
                 Value<String> description = const Value.absent(),
                 Value<DateTime> fetchedAt = const Value.absent(),
@@ -2162,7 +3144,7 @@ class $$FeedsTableTableManager
                 lastModified: lastModified,
                 contentHash: contentHash,
                 title: title,
-                host: host,
+                hostId: hostId,
                 imageUrl: imageUrl,
                 description: description,
                 fetchedAt: fetchedAt,
@@ -2175,7 +3157,7 @@ class $$FeedsTableTableManager
                 Value<String?> lastModified = const Value.absent(),
                 Value<String?> contentHash = const Value.absent(),
                 required String title,
-                required String host,
+                required int hostId,
                 required String imageUrl,
                 required String description,
                 required DateTime fetchedAt,
@@ -2186,7 +3168,7 @@ class $$FeedsTableTableManager
                 lastModified: lastModified,
                 contentHash: contentHash,
                 title: title,
-                host: host,
+                hostId: hostId,
                 imageUrl: imageUrl,
                 description: description,
                 fetchedAt: fetchedAt,
@@ -2198,14 +3180,51 @@ class $$FeedsTableTableManager
               )
               .toList(),
           prefetchHooksCallback:
-              ({episodesRefs = false, subscribedChannelsRefs = false}) {
+              ({
+                hostId = false,
+                episodesRefs = false,
+                subscribedChannelsRefs = false,
+                feedCategoriesRefs = false,
+              }) {
                 return PrefetchHooks(
                   db: db,
                   explicitlyWatchedTables: [
                     if (episodesRefs) db.episodes,
                     if (subscribedChannelsRefs) db.subscribedChannels,
+                    if (feedCategoriesRefs) db.feedCategories,
                   ],
-                  addJoins: null,
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (hostId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.hostId,
+                                    referencedTable: $$FeedsTableReferences
+                                        ._hostIdTable(db),
+                                    referencedColumn: $$FeedsTableReferences
+                                        ._hostIdTable(db)
+                                        .id,
+                                  )
+                                  as T;
+                        }
+
+                        return state;
+                      },
                   getPrefetchedDataCallback: (items) async {
                     return [
                       if (episodesRefs)
@@ -2250,6 +3269,27 @@ class $$FeedsTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (feedCategoriesRefs)
+                        await $_getPrefetchedData<
+                          FeedRow,
+                          $FeedsTable,
+                          FeedCategoryRow
+                        >(
+                          currentTable: table,
+                          referencedTable: $$FeedsTableReferences
+                              ._feedCategoriesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$FeedsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).feedCategoriesRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.feedId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -2270,7 +3310,12 @@ typedef $$FeedsTableProcessedTableManager =
       $$FeedsTableUpdateCompanionBuilder,
       (FeedRow, $$FeedsTableReferences),
       FeedRow,
-      PrefetchHooks Function({bool episodesRefs, bool subscribedChannelsRefs})
+      PrefetchHooks Function({
+        bool hostId,
+        bool episodesRefs,
+        bool subscribedChannelsRefs,
+        bool feedCategoriesRefs,
+      })
     >;
 typedef $$EpisodesTableCreateCompanionBuilder =
     EpisodesCompanion Function({
@@ -3356,10 +4401,593 @@ typedef $$PlaybackProgressTableProcessedTableManager =
       PlaybackProgressRow,
       PrefetchHooks Function({bool episodeId})
     >;
+typedef $$CategoriesTableCreateCompanionBuilder =
+    CategoriesCompanion Function({Value<int> id, required String name});
+typedef $$CategoriesTableUpdateCompanionBuilder =
+    CategoriesCompanion Function({Value<int> id, Value<String> name});
+
+final class $$CategoriesTableReferences
+    extends BaseReferences<_$AppDatabase, $CategoriesTable, CategoryRow> {
+  $$CategoriesTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$FeedCategoriesTable, List<FeedCategoryRow>>
+  _feedCategoriesRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.feedCategories,
+    aliasName: 'categories__id__feed_categories__category_id',
+  );
+
+  $$FeedCategoriesTableProcessedTableManager get feedCategoriesRefs {
+    final manager = $$FeedCategoriesTableTableManager(
+      $_db,
+      $_db.feedCategories,
+    ).filter((f) => f.categoryId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_feedCategoriesRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $$CategoriesTableFilterComposer
+    extends Composer<_$AppDatabase, $CategoriesTable> {
+  $$CategoriesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  Expression<bool> feedCategoriesRefs(
+    Expression<bool> Function($$FeedCategoriesTableFilterComposer f) f,
+  ) {
+    final $$FeedCategoriesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.feedCategories,
+      getReferencedColumn: (t) => t.categoryId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$FeedCategoriesTableFilterComposer(
+            $db: $db,
+            $table: $db.feedCategories,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$CategoriesTableOrderingComposer
+    extends Composer<_$AppDatabase, $CategoriesTable> {
+  $$CategoriesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$CategoriesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CategoriesTable> {
+  $$CategoriesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  Expression<T> feedCategoriesRefs<T extends Object>(
+    Expression<T> Function($$FeedCategoriesTableAnnotationComposer a) f,
+  ) {
+    final $$FeedCategoriesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.feedCategories,
+      getReferencedColumn: (t) => t.categoryId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$FeedCategoriesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.feedCategories,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$CategoriesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $CategoriesTable,
+          CategoryRow,
+          $$CategoriesTableFilterComposer,
+          $$CategoriesTableOrderingComposer,
+          $$CategoriesTableAnnotationComposer,
+          $$CategoriesTableCreateCompanionBuilder,
+          $$CategoriesTableUpdateCompanionBuilder,
+          (CategoryRow, $$CategoriesTableReferences),
+          CategoryRow,
+          PrefetchHooks Function({bool feedCategoriesRefs})
+        > {
+  $$CategoriesTableTableManager(_$AppDatabase db, $CategoriesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CategoriesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CategoriesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CategoriesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+              }) => CategoriesCompanion(id: id, name: name),
+          createCompanionCallback:
+              ({Value<int> id = const Value.absent(), required String name}) =>
+                  CategoriesCompanion.insert(id: id, name: name),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$CategoriesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({feedCategoriesRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (feedCategoriesRefs) db.feedCategories,
+              ],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (feedCategoriesRefs)
+                    await $_getPrefetchedData<
+                      CategoryRow,
+                      $CategoriesTable,
+                      FeedCategoryRow
+                    >(
+                      currentTable: table,
+                      referencedTable: $$CategoriesTableReferences
+                          ._feedCategoriesRefsTable(db),
+                      managerFromTypedResult: (p0) =>
+                          $$CategoriesTableReferences(
+                            db,
+                            table,
+                            p0,
+                          ).feedCategoriesRefs,
+                      referencedItemsForCurrentItem: (item, referencedItems) =>
+                          referencedItems.where((e) => e.categoryId == item.id),
+                      typedResults: items,
+                    ),
+                ];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$CategoriesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $CategoriesTable,
+      CategoryRow,
+      $$CategoriesTableFilterComposer,
+      $$CategoriesTableOrderingComposer,
+      $$CategoriesTableAnnotationComposer,
+      $$CategoriesTableCreateCompanionBuilder,
+      $$CategoriesTableUpdateCompanionBuilder,
+      (CategoryRow, $$CategoriesTableReferences),
+      CategoryRow,
+      PrefetchHooks Function({bool feedCategoriesRefs})
+    >;
+typedef $$FeedCategoriesTableCreateCompanionBuilder =
+    FeedCategoriesCompanion Function({
+      required int feedId,
+      required int categoryId,
+      Value<int> rowid,
+    });
+typedef $$FeedCategoriesTableUpdateCompanionBuilder =
+    FeedCategoriesCompanion Function({
+      Value<int> feedId,
+      Value<int> categoryId,
+      Value<int> rowid,
+    });
+
+final class $$FeedCategoriesTableReferences
+    extends
+        BaseReferences<_$AppDatabase, $FeedCategoriesTable, FeedCategoryRow> {
+  $$FeedCategoriesTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $FeedsTable _feedIdTable(_$AppDatabase db) =>
+      db.feeds.createAlias('feed_categories__feed_id__feeds__id');
+
+  $$FeedsTableProcessedTableManager get feedId {
+    final $_column = $_itemColumn<int>('feed_id')!;
+
+    final manager = $$FeedsTableTableManager(
+      $_db,
+      $_db.feeds,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_feedIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $CategoriesTable _categoryIdTable(_$AppDatabase db) =>
+      db.categories.createAlias('feed_categories__category_id__categories__id');
+
+  $$CategoriesTableProcessedTableManager get categoryId {
+    final $_column = $_itemColumn<int>('category_id')!;
+
+    final manager = $$CategoriesTableTableManager(
+      $_db,
+      $_db.categories,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_categoryIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$FeedCategoriesTableFilterComposer
+    extends Composer<_$AppDatabase, $FeedCategoriesTable> {
+  $$FeedCategoriesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  $$FeedsTableFilterComposer get feedId {
+    final $$FeedsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.feedId,
+      referencedTable: $db.feeds,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$FeedsTableFilterComposer(
+            $db: $db,
+            $table: $db.feeds,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$CategoriesTableFilterComposer get categoryId {
+    final $$CategoriesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.categoryId,
+      referencedTable: $db.categories,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CategoriesTableFilterComposer(
+            $db: $db,
+            $table: $db.categories,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$FeedCategoriesTableOrderingComposer
+    extends Composer<_$AppDatabase, $FeedCategoriesTable> {
+  $$FeedCategoriesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  $$FeedsTableOrderingComposer get feedId {
+    final $$FeedsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.feedId,
+      referencedTable: $db.feeds,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$FeedsTableOrderingComposer(
+            $db: $db,
+            $table: $db.feeds,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$CategoriesTableOrderingComposer get categoryId {
+    final $$CategoriesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.categoryId,
+      referencedTable: $db.categories,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CategoriesTableOrderingComposer(
+            $db: $db,
+            $table: $db.categories,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$FeedCategoriesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $FeedCategoriesTable> {
+  $$FeedCategoriesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  $$FeedsTableAnnotationComposer get feedId {
+    final $$FeedsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.feedId,
+      referencedTable: $db.feeds,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$FeedsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.feeds,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$CategoriesTableAnnotationComposer get categoryId {
+    final $$CategoriesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.categoryId,
+      referencedTable: $db.categories,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CategoriesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.categories,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$FeedCategoriesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $FeedCategoriesTable,
+          FeedCategoryRow,
+          $$FeedCategoriesTableFilterComposer,
+          $$FeedCategoriesTableOrderingComposer,
+          $$FeedCategoriesTableAnnotationComposer,
+          $$FeedCategoriesTableCreateCompanionBuilder,
+          $$FeedCategoriesTableUpdateCompanionBuilder,
+          (FeedCategoryRow, $$FeedCategoriesTableReferences),
+          FeedCategoryRow,
+          PrefetchHooks Function({bool feedId, bool categoryId})
+        > {
+  $$FeedCategoriesTableTableManager(
+    _$AppDatabase db,
+    $FeedCategoriesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$FeedCategoriesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$FeedCategoriesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$FeedCategoriesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> feedId = const Value.absent(),
+                Value<int> categoryId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FeedCategoriesCompanion(
+                feedId: feedId,
+                categoryId: categoryId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required int feedId,
+                required int categoryId,
+                Value<int> rowid = const Value.absent(),
+              }) => FeedCategoriesCompanion.insert(
+                feedId: feedId,
+                categoryId: categoryId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$FeedCategoriesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({feedId = false, categoryId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (feedId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.feedId,
+                                referencedTable: $$FeedCategoriesTableReferences
+                                    ._feedIdTable(db),
+                                referencedColumn:
+                                    $$FeedCategoriesTableReferences
+                                        ._feedIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+                    if (categoryId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.categoryId,
+                                referencedTable: $$FeedCategoriesTableReferences
+                                    ._categoryIdTable(db),
+                                referencedColumn:
+                                    $$FeedCategoriesTableReferences
+                                        ._categoryIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$FeedCategoriesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $FeedCategoriesTable,
+      FeedCategoryRow,
+      $$FeedCategoriesTableFilterComposer,
+      $$FeedCategoriesTableOrderingComposer,
+      $$FeedCategoriesTableAnnotationComposer,
+      $$FeedCategoriesTableCreateCompanionBuilder,
+      $$FeedCategoriesTableUpdateCompanionBuilder,
+      (FeedCategoryRow, $$FeedCategoriesTableReferences),
+      FeedCategoryRow,
+      PrefetchHooks Function({bool feedId, bool categoryId})
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
   $AppDatabaseManager(this._db);
+  $$HostsTableTableManager get hosts =>
+      $$HostsTableTableManager(_db, _db.hosts);
   $$FeedsTableTableManager get feeds =>
       $$FeedsTableTableManager(_db, _db.feeds);
   $$EpisodesTableTableManager get episodes =>
@@ -3368,4 +4996,8 @@ class $AppDatabaseManager {
       $$SubscribedChannelsTableTableManager(_db, _db.subscribedChannels);
   $$PlaybackProgressTableTableManager get playbackProgress =>
       $$PlaybackProgressTableTableManager(_db, _db.playbackProgress);
+  $$CategoriesTableTableManager get categories =>
+      $$CategoriesTableTableManager(_db, _db.categories);
+  $$FeedCategoriesTableTableManager get feedCategories =>
+      $$FeedCategoriesTableTableManager(_db, _db.feedCategories);
 }

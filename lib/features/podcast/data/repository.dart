@@ -6,6 +6,7 @@ import 'package:fpdart/fpdart.dart';
 import 'package:pool/pool.dart';
 
 abstract interface class PodcastFeedRepository {
+  AppTaskEither<PodcastFeed> fetchFeed(String url);
   Future<AppEither<List<PodcastFeed>>> fetchFeeds(List<String> urls);
   FutureOr<void> close();
 }
@@ -18,9 +19,31 @@ class PodcastFeedRepositoryImpl implements PodcastFeedRepository {
   final Pool _pool = Pool(4);
 
   @override
+  AppTaskEither<PodcastFeed> fetchFeed(String url) {
+    return _datasource
+        .getFeed(url)
+        .flatMap(
+          (feed) => TaskEither<AppError, PodcastFeed>(() async {
+            final parsed = await feed.toPodcastFeed(url);
+
+            if (parsed == null) {
+              return Either.left(
+                ParseError(
+                  'Failed to convert RSSPodcastFeed: $feed',
+                  StackTrace.current,
+                ),
+              );
+            }
+
+            return Either.right(parsed);
+          }),
+        );
+  }
+
+  @override
   Future<AppEither<List<PodcastFeed>>> fetchFeeds(List<String> urls) async {
     final futures = urls.map(
-      (url) => _pool.withResource(() => _datasource.getFeed(url)),
+      (url) => _pool.withResource(() => _datasource.getFeed(url).run()),
     );
     final results = await Future.wait(futures);
 

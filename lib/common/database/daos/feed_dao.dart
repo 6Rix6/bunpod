@@ -33,10 +33,14 @@ class FeedDao extends DatabaseAccessor<AppDatabase> with _$FeedDaoMixin {
   Future<void> upsertEpisodes(int feedId, List<EpisodesCompanion> episodes) {
     return batch((b) {
       for (final episode in episodes) {
+        final entry = episode.copyWith(feedId: Value(feedId));
         b.insert(
           this.episodes,
-          episode.copyWith(feedId: Value(feedId)),
-          onConflict: DoUpdate((_) => episode.copyWith(feedId: Value(feedId))),
+          entry,
+          onConflict: DoUpdate(
+            (_) => entry,
+            target: [this.episodes.feedId, this.episodes.guid],
+          ),
         );
       }
     });

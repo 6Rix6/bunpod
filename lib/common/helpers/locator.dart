@@ -9,10 +9,15 @@ Future<void> setupLocator() async {
   final database = AppDatabase();
 
   locator
-    ..registerSingleton<AppDatabase>(database)
+    ..registerSingleton<AppDatabase>(
+      database,
+      dispose: (instance) => instance.close(),
+    )
     ..registerSingleton<FeedDao>(database.feedDao)
+    ..registerSingleton<HostDao>(database.hostDao)
     ..registerSingleton<SubscriptionDao>(database.subscriptionDao)
-    ..registerSingleton<PlaybackDao>(database.playbackDao);
+    ..registerSingleton<PlaybackDao>(database.playbackDao)
+    ..registerSingleton<CategoryDao>(database.categoryDao);
 
   locator.registerSingleton<ThemeModeCubit>(ThemeModeCubit());
 
@@ -36,21 +41,38 @@ Future<void> setupLocator() async {
     ..registerSingleton<RSSFeedClient>(
       RSSFeedClient(httpClient: Dio(RSSPodcastDataSourceImpl.baseOptions)),
       dispose: (instace) => instace.close(),
+    )
+    ..registerLazySingleton<RSSPodcastDataSource>(
+      () => RSSPodcastDataSourceImpl(
+        client: locator(),
+        feedDao: locator(),
+        categoryDao: locator(),
+        hostDao: locator(),
+      ),
     );
 
   locator
-    ..registerLazySingleton<RSSPodcastDataSource>(
-      () => RSSPodcastDataSourceImpl(locator(), locator()),
+    ..registerLazySingleton<SubscriptionRepository>(
+      () => SubscriptionRepositoryImpl(locator()),
+    )
+    ..registerLazySingleton<SubscribedChannelsRepository>(
+      () => SubscribedChannelsRepositoryImpl(locator()),
+    )
+    ..registerLazySingleton<SearchRepository>(
+      () => SearchRepositoryImpl(locator()),
     )
     ..registerLazySingleton<PodcastFeedRepository>(
       () => PodcastFeedRepositoryImpl(locator()),
       dispose: (instance) => instance.close(),
     )
-    ..registerFactory<SubscribedFeedsCubit>(
-      () => SubscribedFeedsCubit(locator()),
+    ..registerLazySingleton<CategoryRepository>(
+      () => CategoryRepositoryImpl(locator(), locator()),
+    )
+    ..registerLazySingleton<HostsRepository>(
+      () => HostsRepositoryImpl(locator()),
     );
 
-  locator.registerLazySingleton<SubscriptionRepository>(
-    () => SubscriptionRepositoryImpl(locator()),
+  locator.registerFactory<SubscribedFeedsCubit>(
+    () => SubscribedFeedsCubit(locator(), locator()),
   );
 }

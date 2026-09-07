@@ -100,6 +100,10 @@ class RSSFeedClient {
     return mapRssFeed(args.$1, RssFeed.parse(args.$2));
   }
 
+  static String calcFeedHash(String body) {
+    return sha256.convert(utf8.encode(body)).toString();
+  }
+
   static ({String hash, RSSPodcastFeed feed}) parseFeedWithHash(
     (Uri url, String body) args,
   ) {

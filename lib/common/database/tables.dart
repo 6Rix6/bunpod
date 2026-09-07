@@ -8,10 +8,16 @@ class Feeds extends Table {
   TextColumn get lastModified => text().nullable()();
   TextColumn get contentHash => text().nullable()();
   TextColumn get title => text()();
-  TextColumn get host => text()();
+  IntColumn get hostId => integer().references(Hosts, #id)();
   TextColumn get imageUrl => text()();
   TextColumn get description => text()();
   DateTimeColumn get fetchedAt => dateTime()();
+}
+
+@DataClassName('HostRow')
+class Hosts extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get name => text().unique()();
 }
 
 @DataClassName('SubscribedChannelRow')
@@ -49,4 +55,21 @@ class PlaybackProgress extends Table {
 
   @override
   Set<Column> get primaryKey => {episodeId};
+}
+
+@DataClassName('CategoryRow')
+class Categories extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get name => text().unique()();
+}
+
+@DataClassName('FeedCategoryRow')
+class FeedCategories extends Table {
+  IntColumn get feedId =>
+      integer().references(Feeds, #id, onDelete: KeyAction.cascade)();
+  IntColumn get categoryId =>
+      integer().references(Categories, #id, onDelete: KeyAction.cascade)();
+
+  @override
+  Set<Column> get primaryKey => {feedId, categoryId};
 }

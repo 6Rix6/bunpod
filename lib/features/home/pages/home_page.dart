@@ -62,22 +62,19 @@ class HomePageLoaded extends StatefulWidget {
 }
 
 class _HomePageLoadedState extends State<HomePageLoaded>
-    with SingleTickerProviderStateMixin {
-  late final List<FilterTab> tabs = _buildFilterTabs(context);
+    with TickerProviderStateMixin {
+  late List<FilterTab> _tabs;
   String? _channel;
 
-  List<String?> get _tabValues => tabs.map((tab) => tab.value).toList();
+  List<String?> get _tabValues => _tabs.map((tab) => tab.value).toList();
 
-  late final TabController _tabController = TabController(
-    length: _tabValues.length,
-    vsync: this,
-    animationDuration: const Duration(milliseconds: 220),
-  );
+  late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
-    _tabController.animation!.addListener(_syncChannelToTab);
+    _tabs = _buildFilterTabs(context);
+    _tabController = _createTabController();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       logarte.attach(context: context, visible: kDebugMode);
@@ -86,8 +83,57 @@ class _HomePageLoadedState extends State<HomePageLoaded>
 
   @override
   void dispose() {
+    _tabController.animation?.removeListener(_syncChannelToTab);
     _tabController.dispose();
     super.dispose();
+  }
+
+  TabController _createTabController({int initialIndex = 0}) {
+    final controller = TabController(
+      length: _tabValues.length,
+      vsync: this,
+      initialIndex: initialIndex,
+      animationDuration: const Duration(milliseconds: 220),
+    );
+    controller.animation!.addListener(_syncChannelToTab);
+    return controller;
+  }
+
+  @override
+  void didUpdateWidget(covariant HomePageLoaded oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!_feedsEqual(oldWidget.feeds, widget.feeds)) {
+      _rebuildTabs();
+    }
+  }
+
+  bool _feedsEqual(List<PodcastFeed> a, List<PodcastFeed> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i].channel.name != b[i].channel.name ||
+          a[i].episodes.length != b[i].episodes.length) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  void _rebuildTabs() {
+    final String? previousChannel = _channel;
+    final List<FilterTab> newTabs = _buildFilterTabs(context);
+    final List<String?> newValues = newTabs.map((t) => t.value).toList();
+
+    int newIndex = newValues.indexOf(previousChannel);
+    if (newIndex == -1) newIndex = 0;
+
+    _tabController.animation?.removeListener(_syncChannelToTab);
+    _tabController.dispose();
+
+    setState(() {
+      _tabs = newTabs;
+      _tabController = _createTabController(initialIndex: newIndex);
+      _channel = newValues[newIndex];
+    });
   }
 
   void _syncChannelToTab() {
@@ -146,45 +192,48 @@ class _HomePageLoadedState extends State<HomePageLoaded>
   }
 
   Widget _buildHomePlayer() {
-    return BlocBuilder<PlayerCubit, PlayerState>(
-      builder: (context, state) {
-        if (state.episode == null) {
-          return SizedBox.shrink();
-        }
+    return RepaintBoundary(
+      key: ValueKey('home_player'),
+      child: BlocBuilder<PlayerCubit, PlayerState>(
+        builder: (context, state) {
+          if (state.episode == null) {
+            return SizedBox.shrink();
+          }
 
-        final bool live = state.duration > Duration.zero;
-        final Episode current = state.episode!;
+          final bool live = state.duration > Duration.zero;
+          final Episode current = state.episode!;
 
-        final double progress = live ? state.progress : current.progress;
+          final double progress = live ? state.progress : current.progress;
 
-        final Duration timeLeft = live
-            ? state.remaining
-            : current.total - current.listened;
+          final Duration timeLeft = live
+              ? state.remaining
+              : current.total - current.listened;
 
-        return Column(
-          children: [
-            24.gap,
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: GestureDetector(
-                onTap: () => _openPlayer(current),
-                child: HomePlayerCard(
-                  scheme: current.scheme(context),
-                  imageUrl: current.image,
-                  channel: current.channel,
-                  title: current.title,
-                  progress: progress,
-                  timeLeft: timeLeft,
-                  playing: state.playing,
-                  coverShape: ShapeValues.coverFocused,
-                  onPlayPause: () => context.read<PlayerCubit>().toggle(),
+          return Column(
+            children: [
+              24.gap,
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: GestureDetector(
+                  onTap: () => _openPlayer(current),
+                  child: HomePlayerCard(
+                    scheme: current.scheme(context),
+                    imageUrl: current.image,
+                    channel: current.channel,
+                    title: current.title,
+                    progress: progress,
+                    timeLeft: timeLeft,
+                    playing: state.playing,
+                    coverShape: ShapeValues.coverFocused,
+                    onPlayPause: () => context.read<PlayerCubit>().toggle(),
+                  ),
                 ),
               ),
-            ),
-            32.gap,
-          ],
-        );
-      },
+              32.gap,
+            ],
+          );
+        },
+      ),
     );
   }
 
@@ -195,7 +244,7 @@ class _HomePageLoadedState extends State<HomePageLoaded>
         height: 64,
         child: Center(
           child: FilterTabs(
-            tabs: tabs,
+            tabs: _tabs,
             selected: _channel,
             onSelected: (value) {
               // Tapping the already-selected channel a second time
@@ -329,7 +378,7 @@ class _HomePageLoadedState extends State<HomePageLoaded>
         headerSliverBuilder: (context, innerScrolled) {
           return [
             SliverToBoxAdapter(
-              child: RepaintBoundary(child: _buildHomePlayer()),
+              child: _buildHomePlayer(),
             ),
             SliverOverlapAbsorber(
               handle: NestedScrollView.sliverOverlapAbsorberHandleFor(

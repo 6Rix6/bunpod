@@ -16,6 +16,7 @@ sealed class Channel with _$Channel {
     required int color,
     required String image,
     required String description,
+    @Default([]) List<String> categories,
   }) = _Channel;
 
   factory Channel.fromJson(Map<String, dynamic> json) =>

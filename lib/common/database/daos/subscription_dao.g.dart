@@ -4,6 +4,7 @@ part of 'subscription_dao.dart';
 
 // ignore_for_file: type=lint
 mixin _$SubscriptionDaoMixin on DatabaseAccessor<AppDatabase> {
+  $HostsTable get hosts => attachedDatabase.hosts;
   $FeedsTable get feeds => attachedDatabase.feeds;
   $SubscribedChannelsTable get subscribedChannels =>
       attachedDatabase.subscribedChannels;
@@ -13,6 +14,8 @@ mixin _$SubscriptionDaoMixin on DatabaseAccessor<AppDatabase> {
 class SubscriptionDaoManager {
   final _$SubscriptionDaoMixin _db;
   SubscriptionDaoManager(this._db);
+  $$HostsTableTableManager get hosts =>
+      $$HostsTableTableManager(_db.attachedDatabase, _db.hosts);
   $$FeedsTableTableManager get feeds =>
       $$FeedsTableTableManager(_db.attachedDatabase, _db.feeds);
   $$SubscribedChannelsTableTableManager get subscribedChannels =>

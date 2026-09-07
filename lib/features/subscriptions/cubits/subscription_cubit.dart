@@ -4,44 +4,49 @@ import 'package:hydrated_bloc/hydrated_bloc.dart';
 
 class SubscriptionCubit extends HydratedCubit<ViewState<bool>> {
   SubscriptionCubit(
-    this.repository, {
-    required this.feedUrl,
-  }) : super(const ViewIdle()) {
+    this._repository, {
+    required String feedUrl,
+  }) : _feedUrl = feedUrl,
+       super(const ViewIdle()) {
     _subscribeToStream();
   }
 
-  final SubscriptionRepository repository;
-  final String feedUrl;
+  final SubscriptionRepository _repository;
+  final String _feedUrl;
   StreamSubscription<bool>? _subscription;
 
   @override
-  String get id => feedUrl;
+  String get id => _feedUrl;
 
   void _subscribeToStream() {
-    _subscription = repository
-        .watchIsSubscribed(feedUrl)
+    _subscription = _repository
+        .watchIsSubscribed(_feedUrl)
         .listen(
           (isSubscribed) => emit(ViewReady(isSubscribed)),
-          onError: (Object e) => emit(
+          onError: (e) => emit(
             state.copyWithPrevious(ViewFailed(CacheError(e.toString()))),
           ),
         );
   }
 
   Future<void> subscribe() async {
-    try {
-      await repository.subscribe(feedUrl);
-    } catch (e) {
-      emit(state.copyWithPrevious(ViewFailed(AppError.cache(e.toString()))));
-    }
+    await _repository
+        .subscribe(_feedUrl)
+        .match(
+          (error) => emit(state.copyWithPrevious(ViewFailed(error))),
+          (_) {},
+        )
+        .run();
   }
 
   Future<void> unsubscribe() async {
-    try {
-      await repository.unsubscribe(feedUrl);
-    } catch (e) {
-      emit(state.copyWithPrevious(ViewFailed(AppError.cache(e.toString()))));
-    }
+    await _repository
+        .unsubscribe(_feedUrl)
+        .match(
+          (error) => emit(state.copyWithPrevious(ViewFailed(error))),
+          (_) {},
+        )
+        .run();
   }
 
   Future<void> toggle() async {
