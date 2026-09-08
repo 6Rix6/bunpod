@@ -44,10 +44,7 @@ class _PlayerPageState extends State<PlayerPage> {
       Navigator.of(context).pop();
       return;
     }
-    final Channel? channel = channelByName(widget.episode.channel);
-    if (channel != null) {
-      Navigator.of(context).push(MockChannelPage.route(channel));
-    }
+    Navigator.of(context).push(ChannelPage.route(widget.episode.feedurl));
   }
 
   @override

@@ -154,14 +154,11 @@ class _HomePageLoadedState extends State<HomePageLoaded>
       final Channel channel = feed.channel;
 
       final String value = channel.name;
-      final String label = value.length > 10
-          ? '${value.substring(0, 10)}...'
-          : value;
 
       tabs.add(
         FilterTab(
           value: value,
-          label: label,
+          label: value,
           seed: channel.seed,
           image: channel.image,
           shape: ShapeValues.coverFocused,
@@ -316,19 +313,6 @@ class _HomePageLoadedState extends State<HomePageLoaded>
         SliverPadding(
           padding: const EdgeInsets.only(bottom: 32),
           sliver: SliverList(
-            // itemExtentBuilder: (index, dimensions) {
-            //   final item = items[index];
-            //
-            //   if (item is HeaderItem) {
-            //     return SectionHeader.height(item.topPadding);
-            //   }
-            //
-            //   if (item is EpisodeItem) {
-            //     return EpisodeCard.height + 8; // 8 for padding
-            //   }
-            //
-            //   return 0.0;
-            // },
             delegate: SliverChildBuilderDelegate(
               (context, index) {
                 final item = items[index];

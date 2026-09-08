@@ -47,14 +47,14 @@ class FeedDao extends DatabaseAccessor<AppDatabase> with _$FeedDaoMixin {
   }
 
   /// List of episodes under feedId
-  Future<List<EpisodeRow>> getEpisodesByFeedId(int feedId) {
+  Future<List<EpisodeRow>> getEpisodesForFeed(int feedId) {
     return (select(episodes)
           ..where((e) => e.feedId.equals(feedId))
           ..orderBy([(e) => OrderingTerm.desc(e.pubDate)]))
         .get();
   }
 
-  Stream<List<EpisodeRow>> watchEpisodesByFeedId(int feedId) {
+  Stream<List<EpisodeRow>> watchEpisodesForFeed(int feedId) {
     return (select(episodes)
           ..where((e) => e.feedId.equals(feedId))
           ..orderBy([(e) => OrderingTerm.desc(e.pubDate)]))

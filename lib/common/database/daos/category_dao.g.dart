@@ -8,6 +8,8 @@ mixin _$CategoryDaoMixin on DatabaseAccessor<AppDatabase> {
   $FeedsTable get feeds => attachedDatabase.feeds;
   $CategoriesTable get categories => attachedDatabase.categories;
   $FeedCategoriesTable get feedCategories => attachedDatabase.feedCategories;
+  $SubscribedChannelsTable get subscribedChannels =>
+      attachedDatabase.subscribedChannels;
   CategoryDaoManager get managers => CategoryDaoManager(this);
 }
 
@@ -24,5 +26,10 @@ class CategoryDaoManager {
       $$FeedCategoriesTableTableManager(
         _db.attachedDatabase,
         _db.feedCategories,
+      );
+  $$SubscribedChannelsTableTableManager get subscribedChannels =>
+      $$SubscribedChannelsTableTableManager(
+        _db.attachedDatabase,
+        _db.subscribedChannels,
       );
 }

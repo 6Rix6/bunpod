@@ -6,6 +6,8 @@ part of 'host_dao.dart';
 mixin _$HostDaoMixin on DatabaseAccessor<AppDatabase> {
   $HostsTable get hosts => attachedDatabase.hosts;
   $FeedsTable get feeds => attachedDatabase.feeds;
+  $SubscribedChannelsTable get subscribedChannels =>
+      attachedDatabase.subscribedChannels;
   HostDaoManager get managers => HostDaoManager(this);
 }
 
@@ -16,4 +18,9 @@ class HostDaoManager {
       $$HostsTableTableManager(_db.attachedDatabase, _db.hosts);
   $$FeedsTableTableManager get feeds =>
       $$FeedsTableTableManager(_db.attachedDatabase, _db.feeds);
+  $$SubscribedChannelsTableTableManager get subscribedChannels =>
+      $$SubscribedChannelsTableTableManager(
+        _db.attachedDatabase,
+        _db.subscribedChannels,
+      );
 }

@@ -7,6 +7,7 @@ part of 'episode.dart';
 // **************************************************************************
 
 _Episode _$EpisodeFromJson(Map<String, dynamic> json) => _Episode(
+  guid: json['guid'] as String,
   bucket: $enumDecode(_$BucketEnumMap, json['bucket']),
   channel: json['channel'] as String,
   host: json['host'] as String,
@@ -14,12 +15,14 @@ _Episode _$EpisodeFromJson(Map<String, dynamic> json) => _Episode(
   date: json['date'] as String,
   color: (json['color'] as num).toInt(),
   image: json['image'] as String,
+  feedurl: json['feedurl'] as String,
   audioUrl: json['audioUrl'] as String,
   total: Duration(microseconds: (json['total'] as num).toInt()),
   listened: Duration(microseconds: (json['listened'] as num).toInt()),
 );
 
 Map<String, dynamic> _$EpisodeToJson(_Episode instance) => <String, dynamic>{
+  'guid': instance.guid,
   'bucket': _$BucketEnumMap[instance.bucket]!,
   'channel': instance.channel,
   'host': instance.host,
@@ -27,6 +30,7 @@ Map<String, dynamic> _$EpisodeToJson(_Episode instance) => <String, dynamic>{
   'date': instance.date,
   'color': instance.color,
   'image': instance.image,
+  'feedurl': instance.feedurl,
   'audioUrl': instance.audioUrl,
   'total': instance.total.inMicroseconds,
   'listened': instance.listened.inMicroseconds,

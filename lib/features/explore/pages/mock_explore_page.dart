@@ -67,7 +67,8 @@ class _MockExplorePageState extends State<MockExplorePage> {
 
     final Set<String> viaCategory = <String>{
       for (final ExploreCategory c in mockCategories)
-        if (c.name.toLowerCase().contains(q)) ...c.channels.map((channel) => channel.name),
+        if (c.name.toLowerCase().contains(q))
+          ...c.channels.map((channel) => channel.name),
     };
 
     return <Channel>[
@@ -159,7 +160,7 @@ class _Body extends StatelessWidget {
                   focusNode: searchFocus,
                   onChanged: onQueryChanged,
                   onSubmitted: onQuerySubmitted,
-                  onClear: onClearSearch,
+                  onClearSearch: onClearSearch,
                   isLoading: false,
                 ),
                 if (category != null) ...[

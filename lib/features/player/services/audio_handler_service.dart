@@ -78,14 +78,14 @@ class AudioHandlerService extends BaseAudioHandler with SeekHandler {
   /// Loads [episode] for playback. Loading the already-loaded episode is a
   /// no-op, so reopening the player never restarts the stream.
   Future<void> load(Episode episode) async {
-    if (mediaItem.valueOrNull?.id == episode.id &&
+    if (mediaItem.valueOrNull?.id == episode.guid &&
         _player.audioSource != null) {
       return;
     }
 
     mediaItem.add(
       MediaItem(
-        id: episode.id,
+        id: episode.guid,
         title: episode.title,
         artist: episode.channel,
         artUri: Uri.parse(episode.image),

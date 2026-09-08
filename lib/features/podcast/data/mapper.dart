@@ -7,7 +7,7 @@ extension PodcastFeedMapper on RSSPodcastFeed {
 
     final seed = await ImageColorCache.of(imageUrl!);
 
-    final channel = toChannel(seed: seed);
+    final channel = toChannel(seed: seed, feedUrl: url);
     if (channel == null) return null;
 
     final eps = episodes
@@ -20,14 +20,13 @@ extension PodcastFeedMapper on RSSPodcastFeed {
     return PodcastFeed(url: url, channel: channel, episodes: eps);
   }
 
-  Channel? toChannel({
-    required int seed,
-  }) {
+  Channel? toChannel({required int seed, required String feedUrl}) {
     if (title == null || ownerName == null || imageUrl == null) {
       return null;
     }
 
     return Channel(
+      feedUrl: feedUrl,
       name: title!,
       host: ownerName!,
       color: seed,
@@ -46,7 +45,8 @@ extension FeedEpisodeMapper on RSSFeedEpisode {
     required Channel channel,
   }) {
     // Check required non-nullable fields.
-    if (title == null ||
+    if (guid == null ||
+        title == null ||
         publishedAt == null ||
         audioUrl == null ||
         duration == null) {
@@ -54,6 +54,7 @@ extension FeedEpisodeMapper on RSSFeedEpisode {
     }
 
     return Episode(
+      guid: guid!,
       bucket: _calculateBucket(publishedAt!),
       channel: channel.name,
       host: channel.host,
@@ -61,6 +62,7 @@ extension FeedEpisodeMapper on RSSFeedEpisode {
       date: publishedAt!.toIso8601String(),
       color: seed,
       image: channel.image,
+      feedurl: channel.feedUrl,
       audioUrl: audioUrl!,
       total: duration!,
       listened: Duration.zero,

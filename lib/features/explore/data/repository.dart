@@ -16,25 +16,27 @@ class SearchRepositoryImpl implements SearchRepository {
 
   @override
   AppTaskEither<List<SearchResultItem>> search(String query) {
-    return TaskEither(
-      () => _client.search(query, entity: .podcast),
-    ).mapLeft(_mapError).flatMap(_handleResponse);
+    return _searchBy(_client.search(query, limit: 100, entity: .podcast));
   }
 
   @override
   AppTaskEither<List<SearchResultItem>> searchByCategory(
     String query,
   ) {
-    return TaskEither(
-      () => _client.search(query, attribute: .keywordsTerm),
-    ).mapLeft(_mapError).flatMap(_handleResponse);
+    return _searchBy(
+      _client.search(query, limit: 100, attribute: .keywordsTerm),
+    );
   }
 
   @override
   AppTaskEither<List<SearchResultItem>> searchByHost(String query) {
-    return TaskEither(
-      () => _client.search(query, attribute: .authorTerm),
-    ).mapLeft(_mapError).flatMap(_handleResponse);
+    return _searchBy(_client.search(query, limit: 100, attribute: .authorTerm));
+  }
+
+  AppTaskEither<List<SearchResultItem>> _searchBy(
+    Future<Either<api.ApiFailure, Response<api.SearchResponse>>> func,
+  ) {
+    return TaskEither(() => func).mapLeft(_mapError).flatMap(_handleResponse);
   }
 
   AppTaskEither<List<SearchResultItem>> _handleResponse(
@@ -98,7 +100,7 @@ class CategoryRepositoryImpl implements CategoryRepository {
 
   @override
   Stream<List<int>> watchCategories() {
-    return _categoryDao.watchAll().map(
+    return _categoryDao.watchSubscribed().map(
       (rows) => rows.map((row) => row.id).toList(),
     );
   }
@@ -107,7 +109,7 @@ class CategoryRepositoryImpl implements CategoryRepository {
   AppTaskEither<ExploreCategory> getExploreCategory(int id) {
     return TaskEither.tryCatch(() async {
       final row = await _categoryDao.getById(id);
-      final feedRows = await _categoryDao.getFeedsForCategory(id);
+      final feedRows = await _categoryDao.getSubscribedFeedsForCategory(id);
       final channels = await Future.wait(feedRows.map(_mapFeedRow));
 
       return ExploreCategory(
@@ -135,7 +137,7 @@ class HostsRepositoryImpl implements HostsRepository {
 
   @override
   Stream<List<int>> watchHosts() {
-    return _hostDao.watchAll().map(
+    return _hostDao.watchSubscribed().map(
       (rows) => rows.map((row) => row.id).toList(),
     );
   }
@@ -144,7 +146,7 @@ class HostsRepositoryImpl implements HostsRepository {
   AppTaskEither<ExploreHost> getExploreHost(int id) {
     return TaskEither.tryCatch(() async {
       final row = await _hostDao.getById(id);
-      final feedRows = await _hostDao.getFeedsByHostId(id);
+      final feedRows = await _hostDao.getSubscribedFeedsForHost(id);
       final channels = await Future.wait(feedRows.map(_mapFeedRow));
 
       return ExploreHost(

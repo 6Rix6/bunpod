@@ -2,10 +2,11 @@ import 'dart:async';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:bunpod/bunpod.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:hydrated_bloc/hydrated_bloc.dart';
 
 part 'player_cubit.freezed.dart';
+part 'player_cubit.g.dart';
 
 /// Immutable snapshot of the shared player for the UI.
 @freezed
@@ -20,6 +21,9 @@ abstract class PlayerState with _$PlayerState {
     @Default(Duration.zero) Duration buffered,
     @Default(Duration.zero) Duration duration,
   }) = _PlayerState;
+
+  factory PlayerState.fromJson(Map<String, dynamic> json) =>
+      _$PlayerStateFromJson(json);
 }
 
 extension PlayerStateX on PlayerState {
@@ -35,7 +39,7 @@ extension PlayerStateX on PlayerState {
 }
 
 /// Single shared player state, backed by the OS-integrated audio handler.
-class PlayerCubit extends Cubit<PlayerState> {
+class PlayerCubit extends HydratedCubit<PlayerState> {
   PlayerCubit(this._handler) : super(const PlayerState()) {
     _subscribe();
   }
@@ -72,6 +76,8 @@ class PlayerCubit extends Cubit<PlayerState> {
       if (duration != null) emit(state.copyWith(duration: duration));
     });
   }
+
+  // Future<String?> getCurrentChannelFeedUrl() {}
 
   /// Switches to [episode] unless it is already loaded.
   Future<void> load(Episode episode) async {
@@ -111,4 +117,11 @@ class PlayerCubit extends Cubit<PlayerState> {
     await _durationSubscription?.cancel();
     await super.close();
   }
+
+  @override
+  PlayerState? fromJson(Map<String, dynamic> json) =>
+      PlayerState.fromJson(json).copyWith(playing: false);
+
+  @override
+  Map<String, dynamic>? toJson(PlayerState state) => state.toJson();
 }

@@ -13,11 +13,15 @@ extension ItunesPodcastMapper on ItunesPodcast {
         collectionName ??
         collectionCensoredName;
 
-    if (imageUrl == null || name == null || artistName == null) {
+    if (feedUrl == null ||
+        imageUrl == null ||
+        name == null ||
+        artistName == null) {
       return null;
     }
 
     return Channel(
+      feedUrl: feedUrl!,
       name: name,
       host: artistName!,
       description: '',
@@ -32,6 +36,7 @@ extension FeedRowMapper on FeedRow {
     final color = await ImageColorCache.of(imageUrl);
 
     return Channel(
+      feedUrl: url,
       name: title,
       host: host,
       color: color,

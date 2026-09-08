@@ -46,7 +46,7 @@ class _ExplorePageState extends State<ExplorePage> {
 
   void _pickExploreItem(ExploreItem item) async {
     if (identical(_exploreItem, item)) {
-      _clearCategory();
+      _clearExploreItem();
       return;
     }
 
@@ -61,16 +61,16 @@ class _ExplorePageState extends State<ExplorePage> {
 
     if (!mounted) return;
 
+    setState(() => _exploreItem = item);
+
     if (_query.isNotEmpty && identical(_exploreItem, item)) {
       _searchCubit.filter(_query);
     }
 
-    setState(() => _exploreItem = item);
-
     await _scrollToTop();
   }
 
-  void _clearCategory() {
+  void _clearExploreItem() {
     _search.clear();
     _searchCubit.clear();
     setState(() => _exploreItem = null);
@@ -106,8 +106,8 @@ class _ExplorePageState extends State<ExplorePage> {
   Future<void> _scrollToTop() async {
     await _scrollController.animateTo(
       0,
-      duration: const Duration(milliseconds: 200),
-      curve: Curves.easeInOut,
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeOutExpo,
     );
   }
 
@@ -127,7 +127,7 @@ class _ExplorePageState extends State<ExplorePage> {
         body: _Body(
           exploreItem: _exploreItem,
           onPickExploreItem: _pickExploreItem,
-          onClearCategory: _clearCategory,
+          onClearExploreItem: _clearExploreItem,
           onOpenChannel: _openChannel,
           scrollController: _scrollController,
         ),
@@ -203,7 +203,7 @@ class _AppBarBottom extends StatelessWidget implements PreferredSizeWidget {
           focusNode: searchFocus,
           onChanged: onQueryChanged,
           onSubmitted: onQuerySubmitted,
-          onClear: onClearSearch,
+          onClearSearch: onClearSearch,
           isLoading: value,
         ),
       ),
@@ -215,14 +215,14 @@ class _Body extends StatelessWidget {
   const _Body({
     required this.exploreItem,
     required this.onPickExploreItem,
-    required this.onClearCategory,
+    required this.onClearExploreItem,
     required this.onOpenChannel,
     required this.scrollController,
   });
 
   final ExploreItem? exploreItem;
   final ValueChanged<ExploreItem> onPickExploreItem;
-  final VoidCallback onClearCategory;
+  final VoidCallback onClearExploreItem;
   final ValueChanged<String> onOpenChannel;
   final ScrollController scrollController;
 
@@ -241,7 +241,7 @@ class _Body extends StatelessWidget {
                 children: [
                   ExploreItemPill(
                     item: exploreItem!,
-                    onClear: onClearCategory,
+                    onClear: onClearExploreItem,
                   ),
                 ],
               ),
@@ -388,25 +388,27 @@ class _Body extends StatelessWidget {
     return [
       SliverPadding(
         padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
-        sliver: SliverGrid.builder(
+        sliver: SliverGrid(
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 3,
             mainAxisSpacing: 20,
             crossAxisSpacing: 12,
             childAspectRatio: 0.69,
           ),
-          itemCount: results.length,
-          itemBuilder: (BuildContext context, int index) {
-            final item = results[index];
-            final Channel channel = item.channel;
+          delegate: SliverChildBuilderDelegate(
+            (context, index) {
+              final item = results[index];
+              final Channel channel = item.channel;
 
-            return ResultTile(
-              channel: channel,
-              onTap: () {
-                onOpenChannel(item.feedUrl);
-              },
-            );
-          },
+              return ResultTile(
+                channel: channel,
+                onTap: () {
+                  onOpenChannel(item.feedUrl);
+                },
+              );
+            },
+            childCount: results.length,
+          ),
         ),
       ),
     ];

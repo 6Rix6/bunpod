@@ -12,6 +12,7 @@ part of 'player_cubit.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
+
 /// @nodoc
 mixin _$PlayerState {
 
@@ -24,6 +25,8 @@ mixin _$PlayerState {
 @pragma('vm:prefer-inline')
 $PlayerStateCopyWith<PlayerState> get copyWith => _$PlayerStateCopyWithImpl<PlayerState>(this as PlayerState, _$identity);
 
+  /// Serializes this PlayerState to a JSON map.
+  Map<String, dynamic> toJson();
 
 
 @override
@@ -31,7 +34,7 @@ bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is PlayerState&&(identical(other.episode, episode) || other.episode == episode)&&(identical(other.playing, playing) || other.playing == playing)&&(identical(other.processing, processing) || other.processing == processing)&&(identical(other.position, position) || other.position == position)&&(identical(other.buffered, buffered) || other.buffered == buffered)&&(identical(other.duration, duration) || other.duration == duration));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode => Object.hash(runtimeType,episode,playing,processing,position,buffered,duration);
 
@@ -223,11 +226,11 @@ return $default(_that.episode,_that.playing,_that.processing,_that.position,_tha
 }
 
 /// @nodoc
-
+@JsonSerializable()
 
 class _PlayerState implements PlayerState {
   const _PlayerState({this.episode, this.playing = false, this.processing = AudioProcessingState.idle, this.position = Duration.zero, this.buffered = Duration.zero, this.duration = Duration.zero});
-  
+  factory _PlayerState.fromJson(Map<String, dynamic> json) => _$PlayerStateFromJson(json);
 
 /// The episode handed to [PlayerCubit.load]. Playback metadata comes from
 /// the handler, this only anchors the UI to a feed entry.
@@ -244,14 +247,17 @@ class _PlayerState implements PlayerState {
 @pragma('vm:prefer-inline')
 _$PlayerStateCopyWith<_PlayerState> get copyWith => __$PlayerStateCopyWithImpl<_PlayerState>(this, _$identity);
 
-
+@override
+Map<String, dynamic> toJson() {
+  return _$PlayerStateToJson(this, );
+}
 
 @override
 bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is _PlayerState&&(identical(other.episode, episode) || other.episode == episode)&&(identical(other.playing, playing) || other.playing == playing)&&(identical(other.processing, processing) || other.processing == processing)&&(identical(other.position, position) || other.position == position)&&(identical(other.buffered, buffered) || other.buffered == buffered)&&(identical(other.duration, duration) || other.duration == duration));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode => Object.hash(runtimeType,episode,playing,processing,position,buffered,duration);
 

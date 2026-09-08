@@ -3,7 +3,7 @@ import 'package:bunpod/bunpod.dart';
 
 part 'category_dao.g.dart';
 
-@DriftAccessor(tables: [Feeds, Categories, FeedCategories])
+@DriftAccessor(tables: [Feeds, Categories, FeedCategories, SubscribedChannels])
 class CategoryDao extends DatabaseAccessor<AppDatabase>
     with _$CategoryDaoMixin {
   CategoryDao(super.db);
@@ -18,6 +18,23 @@ class CategoryDao extends DatabaseAccessor<AppDatabase>
 
   Stream<List<CategoryRow>> watchAll() {
     return select(categories).watch();
+  }
+
+  Stream<List<CategoryRow>> watchSubscribed() {
+    final query = select(categories).join([
+      innerJoin(
+        feedCategories,
+        feedCategories.categoryId.equalsExp(categories.id),
+      ),
+      innerJoin(
+        subscribedChannels,
+        subscribedChannels.feedId.equalsExp(feedCategories.feedId),
+      ),
+    ])..groupBy([categories.id]);
+
+    return query.watch().map(
+      (rows) => rows.map((row) => row.readTable(categories)).toList(),
+    );
   }
 
   Future<void> addCategoryToFeed(int feedId, int categoryId) {
@@ -50,6 +67,24 @@ class CategoryDao extends DatabaseAccessor<AppDatabase>
     final query = select(feeds).join([
       innerJoin(feedCategories, feedCategories.feedId.equalsExp(feeds.id)),
     ])..where(feedCategories.categoryId.equals(categoryId));
+
+    return query.map((row) => row.readTable(feeds)).get();
+  }
+
+  Future<List<FeedRow>> getSubscribedFeedsForCategory(int categoryId) {
+    final query =
+        select(feeds).join([
+            innerJoin(
+              subscribedChannels,
+              subscribedChannels.feedId.equalsExp(feeds.id),
+            ),
+            innerJoin(
+              feedCategories,
+              feedCategories.feedId.equalsExp(feeds.id),
+            ),
+          ])
+          ..where(feedCategories.categoryId.equals(categoryId))
+          ..orderBy([OrderingTerm.asc(subscribedChannels.sortOrder)]);
 
     return query.map((row) => row.readTable(feeds)).get();
   }

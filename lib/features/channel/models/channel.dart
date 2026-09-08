@@ -11,6 +11,7 @@ part 'channel.g.dart';
 @freezed
 sealed class Channel with _$Channel {
   const factory Channel({
+    required String feedUrl,
     required String name,
     required String host,
     required int color,

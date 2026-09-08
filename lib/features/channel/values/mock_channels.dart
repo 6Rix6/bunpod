@@ -91,6 +91,7 @@ List<Channel> get mockChannels {
           color: e.seed.toARGB32(),
           image: e.image,
           description: _channelDescriptions[e.channel] ?? '',
+          feedUrl: 'https://podcast.example.com/rss',
         ),
       );
     }

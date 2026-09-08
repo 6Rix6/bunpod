@@ -9,6 +9,7 @@ part 'episode.g.dart';
 @freezed
 abstract class Episode with _$Episode {
   const factory Episode({
+    required String guid,
     required Bucket bucket,
     required String channel,
     required String host,
@@ -16,8 +17,7 @@ abstract class Episode with _$Episode {
     required String date,
     required int color,
     required String image,
-
-    /// Placeholder stream URL until real feed data arrives.
+    required String feedurl,
     required String audioUrl,
     required Duration total,
     required Duration listened,
@@ -28,7 +28,6 @@ abstract class Episode with _$Episode {
 }
 
 extension EpisodeX on Episode {
-  /// Stable identifier across restarts (mock feeds have no GUID yet).
   String get id => '$channel|$title';
 
   double get progress =>

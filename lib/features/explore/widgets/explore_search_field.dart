@@ -10,7 +10,7 @@ class ExploreSearchField extends StatelessWidget {
     required this.focusNode,
     required this.onChanged,
     required this.onSubmitted,
-    required this.onClear,
+    required this.onClearSearch,
     required this.isLoading,
   });
 
@@ -18,7 +18,7 @@ class ExploreSearchField extends StatelessWidget {
   final FocusNode focusNode;
   final ValueChanged<String> onChanged;
   final ValueChanged<String> onSubmitted;
-  final VoidCallback onClear;
+  final VoidCallback onClearSearch;
   final bool isLoading;
 
   static const EdgeInsets padding = EdgeInsets.all(4);
@@ -91,7 +91,7 @@ class ExploreSearchField extends StatelessWidget {
               )
             else if (controller.text.trim().isNotEmpty)
               IconButton(
-                onPressed: onClear,
+                onPressed: onClearSearch,
                 tooltip: 'Clear search',
                 icon: Icon(Icons.close_rounded, color: cs.onSurfaceVariant),
               )

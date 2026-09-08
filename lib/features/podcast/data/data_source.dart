@@ -221,7 +221,7 @@ class RSSPodcastDataSourceImpl implements RSSPodcastDataSource {
     return TaskEither.tryCatch(() async {
       final host = await _hostDao.getById(row.hostId);
 
-      final epRows = await _feedDao.getEpisodesByFeedId(row.id);
+      final epRows = await _feedDao.getEpisodesForFeed(row.id);
       final episodes = epRows.map(_mapEpisodeRow).toList();
 
       final categoryRows = await _categoryDao.getCategoriesForFeed(row.id);
@@ -241,6 +241,7 @@ class RSSPodcastDataSourceImpl implements RSSPodcastDataSource {
 
   RSSFeedEpisode _mapEpisodeRow(EpisodeRow row) {
     return RSSFeedEpisode(
+      guid: row.guid,
       title: row.title,
       publishedAt: row.pubDate,
       audioUrl: row.audioUrl,

@@ -16,7 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Channel {
 
- String get name; String get host; int get color; String get image; String get description; List<String> get categories;
+ String get feedUrl; String get name; String get host; int get color; String get image; String get description; List<String> get categories;
 /// Create a copy of Channel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -29,16 +29,16 @@ $ChannelCopyWith<Channel> get copyWith => _$ChannelCopyWithImpl<Channel>(this as
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Channel&&(identical(other.name, name) || other.name == name)&&(identical(other.host, host) || other.host == host)&&(identical(other.color, color) || other.color == color)&&(identical(other.image, image) || other.image == image)&&(identical(other.description, description) || other.description == description)&&const DeepCollectionEquality().equals(other.categories, categories));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Channel&&(identical(other.feedUrl, feedUrl) || other.feedUrl == feedUrl)&&(identical(other.name, name) || other.name == name)&&(identical(other.host, host) || other.host == host)&&(identical(other.color, color) || other.color == color)&&(identical(other.image, image) || other.image == image)&&(identical(other.description, description) || other.description == description)&&const DeepCollectionEquality().equals(other.categories, categories));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,name,host,color,image,description,const DeepCollectionEquality().hash(categories));
+int get hashCode => Object.hash(runtimeType,feedUrl,name,host,color,image,description,const DeepCollectionEquality().hash(categories));
 
 @override
 String toString() {
-  return 'Channel(name: $name, host: $host, color: $color, image: $image, description: $description, categories: $categories)';
+  return 'Channel(feedUrl: $feedUrl, name: $name, host: $host, color: $color, image: $image, description: $description, categories: $categories)';
 }
 
 
@@ -49,7 +49,7 @@ abstract mixin class $ChannelCopyWith<$Res>  {
   factory $ChannelCopyWith(Channel value, $Res Function(Channel) _then) = _$ChannelCopyWithImpl;
 @useResult
 $Res call({
- String name, String host, int color, String image, String description, List<String> categories
+ String feedUrl, String name, String host, int color, String image, String description, List<String> categories
 });
 
 
@@ -66,9 +66,10 @@ class _$ChannelCopyWithImpl<$Res>
 
 /// Create a copy of Channel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? name = null,Object? host = null,Object? color = null,Object? image = null,Object? description = null,Object? categories = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? feedUrl = null,Object? name = null,Object? host = null,Object? color = null,Object? image = null,Object? description = null,Object? categories = null,}) {
   return _then(Channel(
-name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+feedUrl: null == feedUrl ? _self.feedUrl : feedUrl // ignore: cast_nullable_to_non_nullable
+as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,host: null == host ? _self.host : host // ignore: cast_nullable_to_non_nullable
 as String,color: null == color ? _self.color : color // ignore: cast_nullable_to_non_nullable
 as int,image: null == image ? _self.image : image // ignore: cast_nullable_to_non_nullable
@@ -156,10 +157,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String name,  String host,  int color,  String image,  String description,  List<String> categories)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String feedUrl,  String name,  String host,  int color,  String image,  String description,  List<String> categories)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Channel() when $default != null:
-return $default(_that.name,_that.host,_that.color,_that.image,_that.description,_that.categories);case _:
+return $default(_that.feedUrl,_that.name,_that.host,_that.color,_that.image,_that.description,_that.categories);case _:
   return orElse();
 
 }
@@ -177,10 +178,10 @@ return $default(_that.name,_that.host,_that.color,_that.image,_that.description,
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String name,  String host,  int color,  String image,  String description,  List<String> categories)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String feedUrl,  String name,  String host,  int color,  String image,  String description,  List<String> categories)  $default,) {final _that = this;
 switch (_that) {
 case _Channel():
-return $default(_that.name,_that.host,_that.color,_that.image,_that.description,_that.categories);}
+return $default(_that.feedUrl,_that.name,_that.host,_that.color,_that.image,_that.description,_that.categories);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -194,10 +195,10 @@ return $default(_that.name,_that.host,_that.color,_that.image,_that.description,
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String name,  String host,  int color,  String image,  String description,  List<String> categories)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String feedUrl,  String name,  String host,  int color,  String image,  String description,  List<String> categories)?  $default,) {final _that = this;
 switch (_that) {
 case _Channel() when $default != null:
-return $default(_that.name,_that.host,_that.color,_that.image,_that.description,_that.categories);case _:
+return $default(_that.feedUrl,_that.name,_that.host,_that.color,_that.image,_that.description,_that.categories);case _:
   return null;
 
 }
@@ -209,9 +210,10 @@ return $default(_that.name,_that.host,_that.color,_that.image,_that.description,
 @JsonSerializable()
 
 class _Channel implements Channel {
-  const _Channel({required this.name, required this.host, required this.color, required this.image, required this.description,  List<String> categories = const []}): _categories = categories;
+  const _Channel({required this.feedUrl, required this.name, required this.host, required this.color, required this.image, required this.description,  List<String> categories = const []}): _categories = categories;
   factory _Channel.fromJson(Map<String, dynamic> json) => _$ChannelFromJson(json);
 
+@override final  String feedUrl;
 @override final  String name;
 @override final  String host;
 @override final  int color;
@@ -238,16 +240,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Channel&&(identical(other.name, name) || other.name == name)&&(identical(other.host, host) || other.host == host)&&(identical(other.color, color) || other.color == color)&&(identical(other.image, image) || other.image == image)&&(identical(other.description, description) || other.description == description)&&const DeepCollectionEquality().equals(other._categories, _categories));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Channel&&(identical(other.feedUrl, feedUrl) || other.feedUrl == feedUrl)&&(identical(other.name, name) || other.name == name)&&(identical(other.host, host) || other.host == host)&&(identical(other.color, color) || other.color == color)&&(identical(other.image, image) || other.image == image)&&(identical(other.description, description) || other.description == description)&&const DeepCollectionEquality().equals(other._categories, _categories));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,name,host,color,image,description,const DeepCollectionEquality().hash(_categories));
+int get hashCode => Object.hash(runtimeType,feedUrl,name,host,color,image,description,const DeepCollectionEquality().hash(_categories));
 
 @override
 String toString() {
-  return 'Channel(name: $name, host: $host, color: $color, image: $image, description: $description, categories: $categories)';
+  return 'Channel(feedUrl: $feedUrl, name: $name, host: $host, color: $color, image: $image, description: $description, categories: $categories)';
 }
 
 
@@ -258,7 +260,7 @@ abstract mixin class _$ChannelCopyWith<$Res> implements $ChannelCopyWith<$Res> {
   factory _$ChannelCopyWith(_Channel value, $Res Function(_Channel) _then) = __$ChannelCopyWithImpl;
 @override @useResult
 $Res call({
- String name, String host, int color, String image, String description, List<String> categories
+ String feedUrl, String name, String host, int color, String image, String description, List<String> categories
 });
 
 
@@ -275,9 +277,10 @@ class __$ChannelCopyWithImpl<$Res>
 
 /// Create a copy of Channel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? name = null,Object? host = null,Object? color = null,Object? image = null,Object? description = null,Object? categories = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? feedUrl = null,Object? name = null,Object? host = null,Object? color = null,Object? image = null,Object? description = null,Object? categories = null,}) {
   return _then(_Channel(
-name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+feedUrl: null == feedUrl ? _self.feedUrl : feedUrl // ignore: cast_nullable_to_non_nullable
+as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,host: null == host ? _self.host : host // ignore: cast_nullable_to_non_nullable
 as String,color: null == color ? _self.color : color // ignore: cast_nullable_to_non_nullable
 as int,image: null == image ? _self.image : image // ignore: cast_nullable_to_non_nullable
