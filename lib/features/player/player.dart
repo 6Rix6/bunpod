@@ -6,3 +6,4 @@ export 'widgets/download_button.dart';
 export 'widgets/fav_button.dart';
 export 'widgets/play_button.dart';
 export 'widgets/seek_button.dart';
+export 'widgets/wavy_slider.dart';

@@ -11,6 +11,8 @@ class PlayerControls extends StatelessWidget {
     required this.fav,
     required this.onPlayPause,
     required this.onFav,
+    required this.onSkipBackward,
+    required this.onSkipForward,
   });
 
   final ColorScheme scheme;
@@ -19,6 +21,8 @@ class PlayerControls extends StatelessWidget {
   final bool fav;
   final VoidCallback onPlayPause;
   final VoidCallback onFav;
+  final VoidCallback onSkipBackward;
+  final VoidCallback onSkipForward;
 
   static const double _heroGap = 8;
   static const double _innerGap = 6;
@@ -61,7 +65,7 @@ class PlayerControls extends StatelessWidget {
                               forward: false,
                               color: tonal,
                               iconColor: cs.onSurface,
-                              onTap: () {},
+                              onTap: onSkipBackward,
                             ),
                           ),
                           const SizedBox(width: _innerGap),
@@ -70,7 +74,7 @@ class PlayerControls extends StatelessWidget {
                               forward: true,
                               color: tonal,
                               iconColor: cs.onSurface,
-                              onTap: () {},
+                              onTap: onSkipForward,
                             ),
                           ),
                         ],

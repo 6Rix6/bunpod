@@ -2,7 +2,6 @@ import 'package:bunpod/bunpod.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:material_wavy_progress_indicator/material_wavy_progress_indicator.dart';
 
 class PlayerPage extends StatefulWidget {
   const PlayerPage({
@@ -128,12 +127,14 @@ class _PlayerPageState extends State<PlayerPage> {
                     ),
                   ),
                 ),
-                8.gap,
                 _ProgressBar(
-                  progress: state.progress,
+                  duration: state.duration,
+                  position: state.position,
+                  playing: state.playing,
+                  onChanged: (d) => locator<PlayerCubit>().seekTo(d),
                   scheme: cs,
                 ),
-                24.gap,
+                16.gap,
                 PlayerControls(
                   scheme: cs,
                   playing: state.playing,
@@ -141,6 +142,8 @@ class _PlayerPageState extends State<PlayerPage> {
                   fav: _fav,
                   onPlayPause: () => locator<PlayerCubit>().toggle(),
                   onFav: () => setState(() => _fav = !_fav),
+                  onSkipBackward: () => locator<PlayerCubit>().skipBackward(),
+                  onSkipForward: () => locator<PlayerCubit>().skipForward(),
                 ),
                 const BottomPadding(),
               ],
@@ -152,20 +155,75 @@ class _PlayerPageState extends State<PlayerPage> {
   }
 }
 
-class _ProgressBar extends StatelessWidget {
-  const _ProgressBar({required this.progress, required this.scheme});
+class _ProgressBar extends StatefulWidget {
+  const _ProgressBar({
+    required this.position,
+    required this.duration,
+    required this.onChanged,
+    required this.playing,
+    required this.scheme,
+  });
 
-  final double progress;
+  final Duration position;
+  final Duration duration;
+  final ValueChanged<Duration>? onChanged;
+  final bool playing;
   final ColorScheme scheme;
 
   @override
+  State<_ProgressBar> createState() => _ProgressBarState();
+}
+
+class _ProgressBarState extends State<_ProgressBar> {
+  double? _dragValue;
+
+  String? _formatLabel(double? value) {
+    if (value == null) return null;
+
+    final Duration d = Duration(seconds: value.toInt());
+    final h = d.inHours;
+    final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
+    return h > 0 ? '$h:$m:$s' : '$m:$s';
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final ColorScheme cs = scheme;
-    return WavyLinearProgressIndicator(
-      value: progress.clamp(0.0, 1.0),
-      color: cs.primary,
-      trackColor: cs.onSurface.withValues(alpha: 0.14),
-      stopIndicatorColor: cs.primary,
+    final double max = widget.duration.inSeconds.toDouble();
+    final double value = _dragValue ?? widget.position.inSeconds.toDouble();
+    final bool enabled = widget.onChanged != null;
+
+    final ColorScheme cs = widget.scheme;
+
+    final SliderThemeData themeData =
+        SliderTheme.of(
+          context,
+        ).copyWith(
+          activeTrackColor: cs.primary,
+          thumbColor: cs.primary,
+          inactiveTrackColor: cs.onSurface.withValues(alpha: 0.14),
+          showValueIndicator: .onDrag,
+          valueIndicatorColor: cs.primary,
+          valueIndicatorTextStyle: GoogleFonts.unbounded(
+            fontFeatures: [.tabularFigures()],
+          ),
+        );
+
+    return WavySlider(
+      value: value.clamp(0.0, max),
+      min: 0.0,
+      max: max,
+      onChanged: enabled ? (v) => setState(() => _dragValue = v) : null,
+      onChangeEnd: enabled
+          ? (v) {
+              setState(() => _dragValue = null);
+              widget.onChanged?.call(Duration(seconds: v.toInt()));
+            }
+          : null,
+      wavy: widget.playing,
+      themeData: themeData,
+      label: _formatLabel(_dragValue),
+      wavelength: 42,
     );
   }
 }

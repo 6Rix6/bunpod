@@ -91,8 +91,7 @@ class _PlayButtonState extends State<PlayButton> {
 
   Widget _icon() {
     return switch (widget.processing) {
-      .loading ||
-      .buffering => LoadingIndicator(activeIndicatorColor: widget.foreground),
+      .loading => LoadingIndicator(activeIndicatorColor: widget.foreground),
       _ => Icon(
         widget.playing ? Icons.pause_rounded : Icons.play_arrow_rounded,
         color: widget.foreground,
