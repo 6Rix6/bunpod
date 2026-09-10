@@ -7,10 +7,10 @@ import 'package:apple_podcast_api/src/models/itunes_podcast.dart';
 import 'package:apple_podcast_api/src/models/rss_podcast_feed.dart';
 import 'package:apple_podcast_api/src/models/types.dart';
 import 'package:apple_podcast_api/src/utils/response_extension.dart';
-import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:rss_dart/dart_rss.dart';
+import 'package:xxh3/xxh3.dart';
 
 /// A client for fetching and parsing podcast RSS feeds.
 ///
@@ -101,13 +101,13 @@ class RSSFeedClient {
   }
 
   static String calcFeedHash(String body) {
-    return sha256.convert(utf8.encode(body)).toString();
+    return xxh3String(utf8.encode(body));
   }
 
   static ({String hash, RSSPodcastFeed feed}) parseFeedWithHash(
     (Uri url, String body) args,
   ) {
-    final hash = sha256.convert(utf8.encode(args.$2)).toString();
+    final hash = xxh3String(utf8.encode(args.$2));
     final feed = parseFeed(args);
     return (hash: hash, feed: feed);
   }
