@@ -15,16 +15,16 @@ class MaterialShapeBorder extends OutlinedBorder {
     required RoundedPolygon this.shape,
     super.side,
     this.squash = 0,
-  })  : _cubics = shape.cubics,
-        assert(squash >= 0 && squash <= 1, 'squash has to be in range [0, 1]');
+  }) : _cubics = shape.cubics,
+       assert(squash >= 0 && squash <= 1, 'squash has to be in range [0, 1]');
 
   const MaterialShapeBorder._fromCubics({
     required List<Cubic> cubics,
     super.side,
     this.squash = 0,
-  })  : shape = null,
-        _cubics = cubics,
-        assert(squash >= 0 && squash <= 1, 'squash has to be in range [0, 1]');
+  }) : shape = null,
+       _cubics = cubics,
+       assert(squash >= 0 && squash <= 1, 'squash has to be in range [0, 1]');
 
   /// The shape this border represents.
   ///
@@ -177,15 +177,16 @@ class MaterialShapeBorder extends OutlinedBorder {
       scale = Offset(squash * scale.dx + (1 - squash) * scale.dy, scale.dy);
     }
 
-    final actualRect = Offset(
+    final actualRect =
+        Offset(
           rect.left + (rect.width - scale.dx) / 2,
           rect.top + (rect.height - scale.dy) / 2,
         ) &
         Size(scale.dx, scale.dy);
 
     final matrix = Matrix4.identity()
-      ..translate(actualRect.left, actualRect.top)
-      ..scale(scale.dx, scale.dy);
+      ..translateByDouble(actualRect.left, actualRect.top, 0.0, 1.0)
+      ..scaleByDouble(scale.dx, scale.dy, 1.0, 1.0);
 
     return pathFromCubics(
       path: Path(),
