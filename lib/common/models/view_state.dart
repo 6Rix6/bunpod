@@ -27,6 +27,20 @@ sealed class ViewState<T> with _$ViewState<T> {
     T Function(Object? json) fromJsonT,
   ) => _$ViewStateFromJson(json, fromJsonT);
 
+  factory ViewState.fromJsonSafe(
+    Map<String, dynamic> json,
+    T Function(Object? json) fromJsonT,
+  ) {
+    final ViewState<T> viewState = ViewState.fromJson(json, fromJsonT);
+
+    if (viewState is ViewBusy) {
+      final data = viewState.dataOrNull;
+      return data != null ? ViewReady(data) : const ViewIdle();
+    } else {
+      return viewState;
+    }
+  }
+
   // Copyright: aljan.me
   static Future<ViewState<T>> guard<T>(
     TaskEither<ViewStateError, T> task, {

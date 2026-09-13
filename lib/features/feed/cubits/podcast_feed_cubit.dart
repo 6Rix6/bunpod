@@ -35,7 +35,7 @@ class PodcastFeedCubit extends HydratedCubit<ViewState<PodcastFeed>> {
 
   @override
   ViewState<PodcastFeed>? fromJson(Map<String, dynamic> json) =>
-      ViewState<PodcastFeed>.fromJson(
+      ViewState<PodcastFeed>.fromJsonSafe(
         json,
         (raw) => PodcastFeed.fromJson(raw as Map<String, dynamic>),
       );

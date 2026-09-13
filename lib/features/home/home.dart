@@ -2,7 +2,6 @@ export 'cubits/subscribed_feeds_cubit.dart';
 export 'pages/mock_home_page.dart';
 export 'pages/home_page.dart';
 export 'values/mock_values.dart';
-export 'widgets/episode_card.dart';
 export 'widgets/filter_tabs.dart';
 export 'widgets/home_app_bar.dart';
 export 'widgets/home_player_card.dart';

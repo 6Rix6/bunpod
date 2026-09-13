@@ -7,7 +7,5 @@ List<Channel> get mockSubscriptions => mockChannels;
 
 /// Episodes on [channel] the user hasn't started yet.
 int newEpisodeCount(Channel channel) {
-  return channel.episodes
-      .where((Episode episode) => episode.listened == Duration.zero)
-      .length;
+  return channel.episodes.length;
 }

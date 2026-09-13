@@ -12,8 +12,8 @@ class FeedDao extends DatabaseAccessor<AppDatabase> with _$FeedDaoMixin {
     return (select(feeds)..where((f) => f.url.equals(url))).getSingleOrNull();
   }
 
-  Future<FeedRow?> getById(int id) {
-    return (select(feeds)..where((f) => f.id.equals(id))).getSingleOrNull();
+  Future<FeedRow> getById(int id) {
+    return (select(feeds)..where((f) => f.id.equals(id))).getSingle();
   }
 
   /// On successful retrieval: upserts the feed metadata and returns the ID
@@ -29,9 +29,14 @@ class FeedDao extends DatabaseAccessor<AppDatabase> with _$FeedDaoMixin {
     return row.id;
   }
 
-  /// Upserts the episodes (based on guid).
-  Future<void> upsertEpisodes(int feedId, List<EpisodesCompanion> episodes) {
-    return batch((b) {
+  /// Upserts the episodes (based on guid) and returns guid -> id.
+  Future<Map<String, int>> upsertEpisodes(
+    int feedId,
+    List<EpisodesCompanion> episodes,
+  ) async {
+    if (episodes.isEmpty) return {};
+
+    await batch((b) {
       for (final episode in episodes) {
         final entry = episode.copyWith(feedId: Value(feedId));
         b.insert(
@@ -44,6 +49,13 @@ class FeedDao extends DatabaseAccessor<AppDatabase> with _$FeedDaoMixin {
         );
       }
     });
+
+    final guids = episodes.map((e) => e.guid.value).toList();
+    final rows = await (select(
+      this.episodes,
+    )..where((e) => e.feedId.equals(feedId) & e.guid.isIn(guids))).get();
+
+    return {for (final row in rows) row.guid: row.id};
   }
 
   /// List of episodes under feedId

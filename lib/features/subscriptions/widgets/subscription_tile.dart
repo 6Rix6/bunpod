@@ -2,8 +2,58 @@ import 'dart:math' as math;
 
 import 'package:bunpod/bunpod.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:material_shapes/material_shapes.dart';
 import 'package:motor/motor.dart';
+
+class SubscriptionTileForId extends StatelessWidget {
+  const SubscriptionTileForId({
+    super.key,
+    required this.channelId,
+    required this.borderRadius,
+    required this.onTap,
+    this.onToggled,
+  });
+
+  final int channelId;
+  final BorderRadius borderRadius;
+  final ValueChanged<Channel> onTap;
+  final void Function(Channel channel, bool subscribed)? onToggled;
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider<ChannelCubit>(
+      create: (_) => ChannelCubit(locator(), channelId: channelId),
+      child: BlocBuilder<ChannelCubit, ViewState<Channel>>(
+        builder: (context, state) => switch (state) {
+          _ when state.dataOrNull != null => _buildCard(state.dataOrNull!),
+          _ => SizedBox.shrink(),
+        },
+      ),
+    );
+  }
+
+  Widget _buildCard(Channel channel) {
+    return BlocProvider<SubscriptionCubit>(
+      create: (_) => SubscriptionCubit(locator(), feedUrl: channel.feedUrl),
+      child: BlocBuilder<SubscriptionCubit, ViewState<bool>>(
+        builder: (context, state) => SubscriptionTile(
+          channel: channel,
+          borderRadius: borderRadius,
+          subscribed: state.dataOrNull ?? true,
+          onToggle: () async {
+            final data = state.dataOrNull;
+            if (data == null) return;
+
+            await context.read<SubscriptionCubit>().toggle();
+            onToggled?.call(channel, !data);
+          },
+          onTap: () => onTap(channel),
+        ),
+      ),
+    );
+  }
+}
 
 class SubscriptionTile extends StatelessWidget {
   const SubscriptionTile({

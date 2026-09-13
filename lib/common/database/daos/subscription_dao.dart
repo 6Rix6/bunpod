@@ -13,6 +13,14 @@ class SubscriptionDao extends DatabaseAccessor<AppDatabase>
     with _$SubscriptionDaoMixin {
   SubscriptionDao(super.db);
 
+  Future<List<SubscribedChannelRow>> getAll() {
+    return select(subscribedChannels).get();
+  }
+
+  Stream<List<SubscribedChannelRow>> watchAll() {
+    return select(subscribedChannels).watch();
+  }
+
   Future<bool> isSubscribed(int feedId) async {
     final row = await (select(
       subscribedChannels,

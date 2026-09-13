@@ -3,35 +3,12 @@ import 'dart:async';
 import 'package:bunpod/bunpod.dart';
 import 'package:hydrated_bloc/hydrated_bloc.dart';
 
-class CategoryIdsCubit extends HydratedCubit<ViewState<List<int>>> {
-  CategoryIdsCubit(this._repository) : super(const ViewIdle()) {
-    _subscribeToStream();
-  }
-
+class CategoryIdsCubit extends IntListViewCubit {
+  CategoryIdsCubit(this._repository);
   final CategoryRepository _repository;
-  StreamSubscription<List<int>>? _subscription;
-
-  void _subscribeToStream() {
-    _subscription = _repository.watchCategories().listen(
-      (categories) => emit(ViewReady(categories)),
-      onError: (e) =>
-          emit(state.copyWithPrevious(ViewFailed(CacheError(e.toString())))),
-    );
-  }
 
   @override
-  Map<String, dynamic>? toJson(ViewState<List<int>> state) =>
-      state.toJson((list) => list);
-
-  @override
-  ViewState<List<int>>? fromJson(Map<String, dynamic> json) =>
-      ViewState<List<int>>.fromJson(json, (raw) => raw as List<int>);
-
-  @override
-  Future<void> close() {
-    _subscription?.cancel();
-    return super.close();
-  }
+  Stream<List<int>> watchStream() => _repository.watchCategories();
 }
 
 class ExploreCategoryCubit extends HydratedCubit<ViewState<ExploreCategory>> {
@@ -45,7 +22,7 @@ class ExploreCategoryCubit extends HydratedCubit<ViewState<ExploreCategory>> {
   final int _id;
 
   Future<void> refresh() async {
-    if (state.isBusy) return;
+    if (state.isBusy || isClosed) return;
     emit(state.copyWithPrevious(const ViewBusy()));
 
     final nextState = await ViewState.guard(
@@ -58,7 +35,7 @@ class ExploreCategoryCubit extends HydratedCubit<ViewState<ExploreCategory>> {
   }
 
   @override
-  String get id => _id.toString();
+  String get id => '$runtimeType $_id';
 
   @override
   Map<String, dynamic>? toJson(ViewState<ExploreCategory> state) =>
@@ -66,7 +43,7 @@ class ExploreCategoryCubit extends HydratedCubit<ViewState<ExploreCategory>> {
 
   @override
   ViewState<ExploreCategory>? fromJson(Map<String, dynamic> json) =>
-      ViewState<ExploreCategory>.fromJson(
+      ViewState<ExploreCategory>.fromJsonSafe(
         json,
         (raw) => ExploreCategory.fromJson(raw as Map<String, dynamic>),
       );

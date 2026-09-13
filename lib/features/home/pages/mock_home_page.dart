@@ -122,11 +122,11 @@ class _MockHomePageState extends State<MockHomePage> with TickerProviderStateMix
 
                     final double progress = live
                         ? state.progress
-                        : current.progress;
+                        : 0;
 
                     final Duration timeLeft = live
                         ? state.remaining
-                        : current.total - current.listened;
+                        : current.total - Duration.zero;
 
                     return Column(
                       children: [

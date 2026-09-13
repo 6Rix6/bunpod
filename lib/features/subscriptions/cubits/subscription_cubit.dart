@@ -2,32 +2,49 @@ import 'dart:async';
 import 'package:bunpod/bunpod.dart';
 import 'package:hydrated_bloc/hydrated_bloc.dart';
 
-class SubscriptionCubit extends HydratedCubit<ViewState<bool>> {
+class SubscribedChannelIdsCubit extends ViewCubit<List<int>> {
+  SubscribedChannelIdsCubit(this._repository) {
+    refresh();
+  }
+
+  final SubscribedChannelsRepository _repository;
+
+  Future<void> refresh() async {
+    final prevState = state;
+    if (prevState.isBusy || isClosed) return;
+
+    emit(prevState.copyWithPrevious(const ViewBusy()));
+
+    final nextState = await ViewState.guard(
+      _repository.getSubscribedChannelIds(),
+    );
+
+    if (!isClosed) {
+      emit(prevState.copyWithPrevious(nextState));
+    }
+  }
+
+  @override
+  List<int> toJsonT(List<int> data) => data;
+
+  @override
+  List<int> fromJsonT(Object? json) => (json as List).cast<int>();
+}
+
+class SubscriptionCubit extends StreamViewCubit<bool> {
   SubscriptionCubit(
     this._repository, {
     required String feedUrl,
-  }) : _feedUrl = feedUrl,
-       super(const ViewIdle()) {
-    _subscribeToStream();
-  }
+  }) : _feedUrl = feedUrl;
 
   final SubscriptionRepository _repository;
   final String _feedUrl;
-  StreamSubscription<bool>? _subscription;
 
   @override
-  String get id => _feedUrl;
+  String get id => '$runtimeType $_feedUrl';
 
-  void _subscribeToStream() {
-    _subscription = _repository
-        .watchIsSubscribed(_feedUrl)
-        .listen(
-          (isSubscribed) => emit(ViewReady(isSubscribed)),
-          onError: (e) => emit(
-            state.copyWithPrevious(ViewFailed(CacheError(e.toString()))),
-          ),
-        );
-  }
+  @override
+  Stream<bool> watchStream() => _repository.watchIsSubscribed(_feedUrl);
 
   Future<void> subscribe() async {
     await _repository
@@ -51,7 +68,7 @@ class SubscriptionCubit extends HydratedCubit<ViewState<bool>> {
 
   Future<void> toggle() async {
     final current = state;
-    if (current is ViewBusy) return;
+    if (current.isBusy) return;
 
     final isSubscribed = current.dataOrNull == true;
 
@@ -63,19 +80,45 @@ class SubscriptionCubit extends HydratedCubit<ViewState<bool>> {
   }
 
   @override
-  Future<void> close() {
-    _subscription?.cancel();
-    return super.close();
+  Object? toJsonT(bool data) => data;
+
+  @override
+  bool fromJsonT(Object? json) => json as bool;
+}
+
+class ChannelCubit extends HydratedCubit<ViewState<Channel>> {
+  ChannelCubit(this._repository, {required int channelId})
+    : _id = channelId,
+      super(const ViewIdle()) {
+    refresh();
+  }
+
+  final ChannelsRepository _repository;
+  final int _id;
+
+  Future<void> refresh() async {
+    final previousState = state;
+    if (previousState.isBusy || isClosed) return;
+    emit(previousState.copyWithPrevious(const ViewBusy()));
+
+    final nextState = await ViewState.guard(_repository.getChannelById(_id));
+
+    if (!isClosed) {
+      emit(previousState.copyWithPrevious(nextState));
+    }
   }
 
   @override
-  Map<String, dynamic>? toJson(ViewState<bool> state) =>
-      state.toJson((value) => value);
+  String get id => '$runtimeType $_id';
 
   @override
-  ViewState<bool>? fromJson(Map<String, dynamic> json) =>
-      ViewState<bool>.fromJson(
+  Map<String, dynamic>? toJson(ViewState<Channel> state) =>
+      state.toJson((channel) => channel.toJson());
+
+  @override
+  ViewState<Channel>? fromJson(Map<String, dynamic> json) =>
+      ViewState<Channel>.fromJsonSafe(
         json,
-        (raw) => raw as bool,
+        (raw) => Channel.fromJson(raw as Map<String, dynamic>),
       );
 }

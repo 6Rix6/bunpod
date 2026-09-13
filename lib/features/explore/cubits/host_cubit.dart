@@ -3,35 +3,12 @@ import 'dart:async';
 import 'package:bunpod/bunpod.dart';
 import 'package:hydrated_bloc/hydrated_bloc.dart';
 
-class HostIdsCubit extends HydratedCubit<ViewState<List<int>>> {
-  HostIdsCubit(this._repository) : super(const ViewIdle()) {
-    _subscribeToStream();
-  }
-
+class HostIdsCubit extends IntListViewCubit {
+  HostIdsCubit(this._repository);
   final HostsRepository _repository;
-  StreamSubscription<List<int>>? _subscription;
-
-  void _subscribeToStream() {
-    _subscription = _repository.watchHosts().listen(
-      (categories) => emit(ViewReady(categories)),
-      onError: (e) =>
-          emit(state.copyWithPrevious(ViewFailed(CacheError(e.toString())))),
-    );
-  }
 
   @override
-  Map<String, dynamic>? toJson(ViewState<List<int>> state) =>
-      state.toJson((list) => list);
-
-  @override
-  ViewState<List<int>>? fromJson(Map<String, dynamic> json) =>
-      ViewState<List<int>>.fromJson(json, (raw) => raw as List<int>);
-
-  @override
-  Future<void> close() {
-    _subscription?.cancel();
-    return super.close();
-  }
+  Stream<List<int>> watchStream() => _repository.watchHosts();
 }
 
 class ExploreHostCubit extends HydratedCubit<ViewState<ExploreHost>> {
@@ -45,7 +22,7 @@ class ExploreHostCubit extends HydratedCubit<ViewState<ExploreHost>> {
   final int _id;
 
   Future<void> refresh() async {
-    if (state.isBusy) return;
+    if (state.isBusy || isClosed) return;
     emit(state.copyWithPrevious(const ViewBusy()));
 
     final nextState = await ViewState.guard(
@@ -66,7 +43,7 @@ class ExploreHostCubit extends HydratedCubit<ViewState<ExploreHost>> {
 
   @override
   ViewState<ExploreHost>? fromJson(Map<String, dynamic> json) =>
-      ViewState<ExploreHost>.fromJson(
+      ViewState<ExploreHost>.fromJsonSafe(
         json,
         (raw) => ExploreHost.fromJson(raw as Map<String, dynamic>),
       );

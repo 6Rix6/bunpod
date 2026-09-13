@@ -86,6 +86,7 @@ List<Channel> get mockChannels {
     if (seen.add(e.channel)) {
       channels.add(
         Channel(
+          localId: -1,
           name: e.channel,
           host: e.host,
           color: e.seed.toARGB32(),

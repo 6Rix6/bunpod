@@ -7,6 +7,7 @@ part of 'channel.dart';
 // **************************************************************************
 
 _Channel _$ChannelFromJson(Map<String, dynamic> json) => _Channel(
+  localId: (json['localId'] as num).toInt(),
   feedUrl: json['feedUrl'] as String,
   name: json['name'] as String,
   host: json['host'] as String,
@@ -21,6 +22,7 @@ _Channel _$ChannelFromJson(Map<String, dynamic> json) => _Channel(
 );
 
 Map<String, dynamic> _$ChannelToJson(_Channel instance) => <String, dynamic>{
+  'localId': instance.localId,
   'feedUrl': instance.feedUrl,
   'name': instance.name,
   'host': instance.host,

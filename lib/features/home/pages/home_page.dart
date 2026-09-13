@@ -197,14 +197,7 @@ class _HomePageLoadedState extends State<HomePageLoaded>
             return SizedBox.shrink();
           }
 
-          final bool live = state.duration > Duration.zero;
           final Episode current = state.episode!;
-
-          final double progress = live ? state.progress : current.progress;
-
-          final Duration timeLeft = live
-              ? state.remaining
-              : current.total - current.listened;
 
           return Column(
             children: [
@@ -218,8 +211,8 @@ class _HomePageLoadedState extends State<HomePageLoaded>
                     imageUrl: current.image,
                     channel: current.channel,
                     title: current.title,
-                    progress: progress,
-                    timeLeft: timeLeft,
+                    progress: state.progress,
+                    timeLeft: state.remaining,
                     playing: state.playing,
                     coverShape: ShapeValues.coverFocused,
                     onPlayPause: () => context.read<PlayerCubit>().toggle(),

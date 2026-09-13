@@ -33,7 +33,6 @@ class _EpisodeCardState extends State<EpisodeCard> {
     final Episode episode = widget.episode;
     final bool playing = widget.playing;
     final ColorScheme cs = episode.scheme(context);
-    final double progress = episode.progress;
 
     final Color fill = cs.primary;
     final Color onFill = cs.onPrimary;
@@ -53,33 +52,38 @@ class _EpisodeCardState extends State<EpisodeCard> {
             child: child,
           );
         },
-        child: BlocSelector<PlayerCubit, PlayerState, double>(
-          selector: (state) {
-            return state.episode == episode ? state.progress : progress;
-          },
-          builder: (context, p) {
-            return Stack(
-              children: [
-                Positioned.fill(
-                  child: ClipRect(
-                    clipper: _FillClipper(start: _kFillStart, fraction: p),
-                    child: ColoredBox(color: fill),
+        child: BlocProvider(
+          create: (_) =>
+              PlaybackProgressCubit(locator(), episodeId: episode.localId),
+          child: _progressContainer(
+            (context, data) {
+              final double p = data.total.inSeconds == 0
+                  ? 0.00
+                  : data.listened.inSeconds / data.total.inSeconds;
+
+              return Stack(
+                children: [
+                  Positioned.fill(
+                    child: ClipRect(
+                      clipper: _FillClipper(start: _kFillStart, fraction: p),
+                      child: ColoredBox(color: fill),
+                    ),
                   ),
-                ),
-                _content(context, cs, cs.onSurface, onFill, p),
-                Padding(
-                  padding: EdgeInsets.all(cardPadding),
-                  child: _cover(cs),
-                ),
-                Positioned.fill(
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(onTap: widget.onTap),
+                  _content(context, cs, cs.onSurface, onFill, data),
+                  Padding(
+                    padding: EdgeInsets.all(cardPadding),
+                    child: _cover(cs),
                   ),
-                ),
-              ],
-            );
-          },
+                  Positioned.fill(
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(onTap: widget.onTap),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
@@ -92,9 +96,10 @@ class _EpisodeCardState extends State<EpisodeCard> {
     Duration total,
     Duration listened,
   ) {
-    final Episode episode = widget.episode;
+    final bool started = listened > Duration.zero;
+    final Duration remaining = total - listened;
 
-    if (episode.progress >= 1.0) {
+    if (remaining <= Duration.zero) {
       return Container(
         width: 30,
         height: 30,
@@ -111,9 +116,6 @@ class _EpisodeCardState extends State<EpisodeCard> {
         ),
       );
     }
-
-    final bool started = listened > Duration.zero;
-    final Duration remaining = total - listened;
 
     return Text(
       started ? '-${remaining.remainingLabel}' : remaining.remainingLabel,
@@ -162,10 +164,14 @@ class _EpisodeCardState extends State<EpisodeCard> {
     ColorScheme cs,
     Color fg,
     Color bg,
-    double p,
+    ({Duration total, Duration listened}) progress,
   ) {
     final Episode episode = widget.episode;
     final TextTheme tt = Theme.of(context).textTheme;
+
+    final double p = progress.total.inSeconds == 0
+        ? 0.00
+        : progress.listened.inSeconds / progress.total.inSeconds;
 
     return ShaderMask(
       blendMode: BlendMode.srcIn,
@@ -211,25 +217,46 @@ class _EpisodeCardState extends State<EpisodeCard> {
               ),
             ),
             const SizedBox(width: 16),
-            BlocSelector<
-              PlayerCubit,
-              PlayerState,
-              (Duration total, Duration listened)
-            >(
-              selector: (state) {
-                if (state.episode == episode) {
-                  return (state.duration, state.position);
-                } else {
-                  return (episode.total, episode.listened);
-                }
-              },
-              builder: (context, value) =>
-                  _trailing(context, cs, fg, value.$1, value.$2),
+            _progressContainer(
+              (context, progress) =>
+                  _trailing(context, cs, fg, progress.total, progress.listened),
             ),
           ],
         ),
       ),
     );
+  }
+
+  Widget _progressContainer(
+    Widget Function(
+      BuildContext context,
+      ({Duration total, Duration listened}) progress,
+    )
+    builder,
+  ) {
+    if (widget.playing) {
+      return BlocSelector<
+        PlayerCubit,
+        PlayerState,
+        ({Duration total, Duration listened})
+      >(
+        selector: (state) => (total: state.duration, listened: state.position),
+        builder: builder,
+      );
+    } else {
+      return BlocSelector<
+        PlaybackProgressCubit,
+        ViewState<Duration>,
+        ({Duration total, Duration listened})
+      >(
+        selector: (state) {
+          final position = state.dataOrNull ?? Duration.zero;
+          final total = widget.episode.total;
+          return (total: total, listened: position);
+        },
+        builder: builder,
+      );
+    }
   }
 }
 

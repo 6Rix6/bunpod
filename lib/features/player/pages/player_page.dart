@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bunpod/bunpod.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -131,7 +133,8 @@ class _PlayerPageState extends State<PlayerPage> {
                   duration: state.duration,
                   position: state.position,
                   playing: state.playing,
-                  onChanged: (d) => locator<PlayerCubit>().seekTo(d),
+                  onChanged: (position) =>
+                      locator<PlayerCubit>().seekTo(position),
                   scheme: cs,
                 ),
                 16.gap,
@@ -166,7 +169,7 @@ class _ProgressBar extends StatefulWidget {
 
   final Duration position;
   final Duration duration;
-  final ValueChanged<Duration>? onChanged;
+  final FutureOr<void> Function(Duration position)? onChanged;
   final bool playing;
   final ColorScheme scheme;
 
@@ -185,6 +188,13 @@ class _ProgressBarState extends State<_ProgressBar> {
     final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
     final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
     return h > 0 ? '$h:$m:$s' : '$m:$s';
+  }
+
+  void _onChanged(double value) async {
+    await widget.onChanged?.call(Duration(seconds: value.toInt()));
+    if (context.mounted) {
+      setState(() => _dragValue = null);
+    }
   }
 
   @override
@@ -214,12 +224,7 @@ class _ProgressBarState extends State<_ProgressBar> {
       min: 0.0,
       max: max,
       onChanged: enabled ? (v) => setState(() => _dragValue = v) : null,
-      onChangeEnd: enabled
-          ? (v) {
-              setState(() => _dragValue = null);
-              widget.onChanged?.call(Duration(seconds: v.toInt()));
-            }
-          : null,
+      onChangeEnd: enabled ? _onChanged : null,
       wavy: widget.playing,
       themeData: themeData,
       label: _formatLabel(_dragValue),

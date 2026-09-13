@@ -9,6 +9,7 @@ part 'episode.g.dart';
 @freezed
 abstract class Episode with _$Episode {
   const factory Episode({
+    required int localId, // id of EpisodeRow
     required String guid,
     required Bucket bucket,
     required String channel,
@@ -20,7 +21,6 @@ abstract class Episode with _$Episode {
     required String feedurl,
     required String audioUrl,
     required Duration total,
-    required Duration listened,
   }) = _Episode;
 
   factory Episode.fromJson(Map<String, dynamic> json) =>
@@ -29,9 +29,6 @@ abstract class Episode with _$Episode {
 
 extension EpisodeX on Episode {
   String get id => '$channel|$title';
-
-  double get progress =>
-      total.inSeconds == 0 ? 0 : listened.inSeconds / total.inSeconds;
 
   Color get seed => Color(color);
   ColorScheme scheme(BuildContext context) => SchemeCache.of(context, color);

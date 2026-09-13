@@ -21,18 +21,6 @@ Future<void> setupLocator() async {
 
   locator.registerSingleton<ThemeModeCubit>(ThemeModeCubit());
 
-  // audio_service requires init before runApp.
-  final AudioHandlerService handler =
-      await AudioHandlerService.initAudioService(
-        'app.bunpod.channel.audio',
-        'BunPod',
-        androidNotificationIcon: 'drawable/ic_notification',
-      );
-
-  locator
-    ..registerSingleton<AudioHandlerService>(handler)
-    ..registerSingleton<PlayerCubit>(PlayerCubit(handler));
-
   locator
     ..registerSingleton<ItunesPodcastApi>(
       ItunesPodcastApi(),
@@ -43,12 +31,7 @@ Future<void> setupLocator() async {
       dispose: (instace) => instace.close(),
     )
     ..registerLazySingleton<RSSPodcastDataSource>(
-      () => RSSPodcastDataSourceImpl(
-        client: locator(),
-        feedDao: locator(),
-        categoryDao: locator(),
-        hostDao: locator(),
-      ),
+      () => RSSPodcastDataSourceImpl(locator()),
     );
 
   locator
@@ -58,11 +41,19 @@ Future<void> setupLocator() async {
     ..registerLazySingleton<SubscribedChannelsRepository>(
       () => SubscribedChannelsRepositoryImpl(locator()),
     )
+    ..registerLazySingleton<ChannelsRepository>(
+      () => ChannelsRepositoryImpl(locator(), locator()),
+    )
     ..registerLazySingleton<SearchRepository>(
       () => SearchRepositoryImpl(locator()),
     )
     ..registerLazySingleton<PodcastFeedRepository>(
-      () => PodcastFeedRepositoryImpl(locator()),
+      () => PodcastFeedRepositoryImpl(
+        locator(),
+        categoryDao: locator(),
+        feedDao: locator(),
+        hostDao: locator(),
+      ),
       dispose: (instance) => instance.close(),
     )
     ..registerLazySingleton<CategoryRepository>(
@@ -70,9 +61,24 @@ Future<void> setupLocator() async {
     )
     ..registerLazySingleton<HostsRepository>(
       () => HostsRepositoryImpl(locator()),
+    )
+    ..registerLazySingleton<PlaybackProgressRepository>(
+      () => PlaybackProgressRepositoryImpl(locator()),
     );
 
   locator.registerFactory<SubscribedFeedsCubit>(
     () => SubscribedFeedsCubit(locator(), locator()),
   );
+
+  // audio_service requires init before runApp.
+  final AudioHandlerService handler =
+      await AudioHandlerService.initAudioService(
+        'app.bunpod.channel.audio',
+        'BunPod',
+        androidNotificationIcon: 'drawable/ic_notification',
+      );
+
+  locator
+    ..registerSingleton<AudioHandlerService>(handler)
+    ..registerSingleton<PlayerCubit>(PlayerCubit(handler, locator()));
 }

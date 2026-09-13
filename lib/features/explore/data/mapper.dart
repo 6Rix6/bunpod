@@ -21,6 +21,7 @@ extension ItunesPodcastMapper on ItunesPodcast {
     }
 
     return Channel(
+      localId: -1, // no need localId for search result
       feedUrl: feedUrl!,
       name: name,
       host: artistName!,
@@ -36,6 +37,7 @@ extension FeedRowMapper on FeedRow {
     final color = await ImageColorCache.of(imageUrl);
 
     return Channel(
+      localId: id,
       feedUrl: url,
       name: title,
       host: host,

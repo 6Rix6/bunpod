@@ -33,8 +33,7 @@ class ApplePodcastAmpApi {
       }
 
       return jwtMatch.group(0);
-    } on DioException catch (e) {
-      print('request failed: ${e.message}');
+    } on DioException catch (_) {
       return null;
     }
   }
