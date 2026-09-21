@@ -15,7 +15,14 @@ part 'app_database.g.dart';
     Categories,
     FeedCategories,
   ],
-  daos: [FeedDao, HostDao, SubscriptionDao, PlaybackDao, CategoryDao],
+  daos: [
+    FeedDao,
+    HostDao,
+    SubscriptionDao,
+    PlaybackDao,
+    CategoryDao,
+    EpisodeDao,
+  ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());

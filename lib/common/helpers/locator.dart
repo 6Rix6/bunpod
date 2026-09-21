@@ -17,6 +17,7 @@ Future<void> setupLocator() async {
     ..registerSingleton<HostDao>(database.hostDao)
     ..registerSingleton<SubscriptionDao>(database.subscriptionDao)
     ..registerSingleton<PlaybackDao>(database.playbackDao)
+    ..registerSingleton<EpisodeDao>(database.episodeDao)
     ..registerSingleton<CategoryDao>(database.categoryDao);
 
   locator.registerSingleton<ThemeModeCubit>(ThemeModeCubit());
@@ -62,6 +63,9 @@ Future<void> setupLocator() async {
     ..registerLazySingleton<HostsRepository>(
       () => HostsRepositoryImpl(locator()),
     )
+    ..registerLazySingleton<EpisodeRepository>(
+      () => EpisodeRepositoryImpl(locator(), locator(), locator()),
+    )
     ..registerLazySingleton<PlaybackProgressRepository>(
       () => PlaybackProgressRepositoryImpl(locator()),
     );
@@ -70,7 +74,18 @@ Future<void> setupLocator() async {
     () => SubscribedFeedsCubit(locator(), locator()),
   );
 
-  // audio_service requires init before runApp.
+  final dlManager = DownloadManager();
+  await dlManager.initialize();
+
+  locator
+    ..registerSingleton<DownloadManager>(
+      dlManager,
+      dispose: (instance) => instance.dispose(),
+    )
+    ..registerLazySingleton<DownloadRepository>(
+      () => DownloadRepositoryImpl(locator()),
+    );
+
   final AudioHandlerService handler =
       await AudioHandlerService.initAudioService(
         'app.bunpod.channel.audio',
@@ -80,5 +95,7 @@ Future<void> setupLocator() async {
 
   locator
     ..registerSingleton<AudioHandlerService>(handler)
-    ..registerSingleton<PlayerCubit>(PlayerCubit(handler, locator()));
+    ..registerSingleton<PlayerCubit>(
+      PlayerCubit(handler, locator(), locator()),
+    );
 }

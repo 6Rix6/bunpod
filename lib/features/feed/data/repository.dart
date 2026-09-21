@@ -134,7 +134,7 @@ class PodcastFeedRepositoryImpl implements PodcastFeedRepository {
         );
 
         final companions = feed.episodes
-            .map((e) => _toEpisodeCompanion(feedId, e))
+            .map((e) => _toEpisodeCompanion(feedId, e, feed.imageUrl!))
             .whereType<EpisodesCompanion>()
             .toList();
 
@@ -165,7 +165,11 @@ class PodcastFeedRepositoryImpl implements PodcastFeedRepository {
         feed.imageUrl != null;
   }
 
-  EpisodesCompanion? _toEpisodeCompanion(int feedId, RSSFeedEpisode e) {
+  EpisodesCompanion? _toEpisodeCompanion(
+    int feedId,
+    RSSFeedEpisode e,
+    String imageUrl,
+  ) {
     if (e.guid == null ||
         e.title == null ||
         e.publishedAt == null ||
@@ -184,6 +188,7 @@ class PodcastFeedRepositoryImpl implements PodcastFeedRepository {
       pubDate: e.publishedAt!,
       audioUrl: e.audioUrl!,
       totalSeconds: e.duration!.inSeconds,
+      imageUrl: imageUrl,
     );
   }
 

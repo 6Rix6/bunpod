@@ -8,6 +8,7 @@ class PlayerControls extends StatelessWidget {
     required this.scheme,
     required this.playing,
     required this.processing,
+    required this.episode,
     required this.fav,
     required this.onPlayPause,
     required this.onFav,
@@ -18,6 +19,7 @@ class PlayerControls extends StatelessWidget {
   final ColorScheme scheme;
   final bool playing;
   final AudioProcessingState processing;
+  final Episode episode;
   final bool fav;
   final VoidCallback onPlayPause;
   final VoidCallback onFav;
@@ -88,6 +90,7 @@ class PlayerControls extends StatelessWidget {
                         children: [
                           Expanded(
                             child: DownloadButton(
+                              episode: episode,
                               scheme: cs,
                             ),
                           ),

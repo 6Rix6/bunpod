@@ -1,5 +1,12 @@
+export 'cubits/episode_download_progress_cubit.dart';
+export 'cubits/download_episode_ids_cubit.dart';
+export 'data/repository.dart';
 export 'models/download.dart';
+export 'models/download_progress_info.dart';
 export 'values/mock_downloads.dart';
 export 'pages/downloads_page.dart';
+export 'pages/mock_downloads_page.dart';
+export 'services/download_manager.dart';
+export 'widgets/download_builder.dart';
 export 'widgets/download_section.dart';
 export 'widgets/download_tile.dart';

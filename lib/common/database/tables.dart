@@ -36,7 +36,7 @@ class Episodes extends Table {
   IntColumn get feedId => integer().references(Feeds, #id)();
   TextColumn get guid => text()();
   TextColumn get title => text()();
-  TextColumn get imageUrl => text().nullable()();
+  TextColumn get imageUrl => text()();
   DateTimeColumn get pubDate => dateTime()();
   TextColumn get audioUrl => text()();
   IntColumn get totalSeconds => integer()();

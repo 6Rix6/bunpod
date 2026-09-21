@@ -40,13 +40,14 @@ extension PlayerStateX on PlayerState {
 
 /// Single shared player state, backed by the OS-integrated audio handler.
 class PlayerCubit extends HydratedCubit<PlayerState> {
-  PlayerCubit(this._handler, this._playbackRepository)
+  PlayerCubit(this._handler, this._playbackRepository, this._downloadRepository)
     : super(const PlayerState()) {
     _subscribe();
   }
 
   final AudioHandlerService _handler;
   final PlaybackProgressRepository _playbackRepository;
+  final DownloadRepository _downloadRepository;
 
   static const Duration skipDelta = Duration(seconds: 10);
 
@@ -84,7 +85,11 @@ class PlayerCubit extends HydratedCubit<PlayerState> {
     if (!identical(state.episode, episode)) {
       emit(state.copyWith(episode: episode));
     }
-    await _handler.load(episode);
+
+    try {
+      final downloaded = await _downloadRepository.downloadedFor(episode);
+      await _handler.load(episode, downloaded?.path);
+    } catch (_) {}
   }
 
   Future<void> toggle() async {

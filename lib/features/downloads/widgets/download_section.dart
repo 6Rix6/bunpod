@@ -17,27 +17,28 @@ class DownloadSection extends StatelessWidget {
   final String label;
   final String? meta;
   final Widget? action;
-  final List<DownloadTile> children;
+  final List<Widget> children;
 
-  BorderRadius _radiusFor(int index) {
+  static BorderRadius radiusFor(int index, int itemCount) {
     const Radius outer = .circular(MenuSection.outerRadius);
     const Radius inner = .circular(MenuSection.innerRadius);
 
     return .vertical(
       top: index == 0 ? outer : inner,
-      bottom: index == children.length - 1 ? outer : inner,
+      bottom: index == itemCount - 1 ? outer : inner,
     );
   }
 
   DownloadTile _positioned(DownloadTile tile, int index) {
     return DownloadTile(
       key: tile.key,
+      episode: tile.episode,
       download: tile.download,
       onTap: tile.onTap,
       onDelete: tile.onDelete,
       removing: tile.removing,
       onRemoved: tile.onRemoved,
-      borderRadius: _radiusFor(index),
+      borderRadius: radiusFor(index, children.length),
     );
   }
 
@@ -80,7 +81,10 @@ class DownloadSection extends StatelessWidget {
         ),
         for (int i = 0; i < children.length; i++) ...[
           if (i > 0) MenuSection.tileGap.gap,
-          _positioned(children[i], i),
+          if (children[i] is DownloadTile)
+            _positioned(children[i] as DownloadTile, i)
+          else
+            children[i],
         ],
       ],
     );

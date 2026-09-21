@@ -1,13 +1,11 @@
 import 'package:bunpod/bunpod.dart';
 
-enum DownloadState { downloading, queued, done }
-
 /// One episode stored on (or on its way to) the device.
 class Download {
   const Download({
     required this.episode,
     required this.megabytes,
-    this.state = .done,
+    this.state = .completed,
     this.received = 0,
   });
 
@@ -20,7 +18,7 @@ class Download {
 
   double get progress => megabytes == 0 ? 0 : received / megabytes;
 
-  bool get played => episode.progress >= 1;
+  bool get played => false;
 }
 
 /// Compact file-size label, e.g. `284 MB`, `1.2 GB`.

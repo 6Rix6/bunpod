@@ -1,118 +1,82 @@
+import 'package:bunpod/bunpod.dart';
+import 'package:expressive_snack/expressive_snack.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:material_shapes/material_shapes.dart';
 import 'package:motor/motor.dart';
 
-enum _DownloadState { idle, downloading, done }
-
-/// Tap morphs circle → bun and fills with primary over 5s, then → sunny with a
-/// check. Tap again to reset. While pressed it previews the next shape.
-class DownloadButton extends StatefulWidget {
+class DownloadButton extends StatelessWidget {
   const DownloadButton({
     super.key,
+    required this.episode,
     required this.scheme,
   });
 
+  final Episode episode;
   final ColorScheme scheme;
 
-  @override
-  State<DownloadButton> createState() => _DownloadButtonState();
-}
-
-class _DownloadButtonState extends State<DownloadButton>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _animationController;
-
-  _DownloadState _state = _DownloadState.idle;
-  bool _down = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _animationController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 5),
-    );
-
-    _animationController.addStatusListener((status) {
-      if (status == .completed) {
-        setState(() {
-          _state = .done;
+  void _onTap(BuildContext context, DownloadState state) async {
+    final cubit = context.read<EpisodeDownloadProgressCubit>();
+    switch (state) {
+      case .idle:
+        await cubit.startDownload((error) {
+          showExpressiveSnack(
+            context: context,
+            message: 'Failed to start download.',
+            icon: Icons.error_rounded,
+          );
         });
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
-
-  void _onTap() {
-    switch (_state) {
-      case _DownloadState.idle:
-        setState(() {
-          _state = _DownloadState.downloading;
-        });
-        _animationController.forward(from: 0);
-
-      case _DownloadState.downloading:
         break;
+      case .enqueued:
+      case .running:
+        await cubit.pause();
+        // TODO: show confirm dialog
+        final confirmed = await Future.value(true);
 
-      case _DownloadState.done:
-        setState(() {
-          _state = _DownloadState.idle;
-          _animationController.value = 0;
-        });
-    }
-  }
+        if (confirmed) {
+          await cubit.cancel();
+        } else {
+          await cubit.resume();
+        }
 
-  void _setDown(bool value) {
-    if (_down != value) {
-      setState(() {
-        _down = value;
-      });
+      case .completed:
+        // TODO: show confiem dialog and delete download
+        break;
+      default:
+        break;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final ColorScheme cs = widget.scheme;
-    final bool reduce = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
-    final bool done = _state == .done;
+    final ColorScheme cs = scheme;
     final Color accent = cs.primary;
-    final IconData icon = done
-        ? Icons.check_rounded
-        : Icons.download_for_offline_outlined;
 
-    return SingleMotionBuilder(
-      // Low overshoot so the mid-stop (bun) doesn't bounce past into sunny.
-      motion: const MaterialSpringMotion.standardSpatialFast(),
-      value: (_down && !reduce)
-          ? switch (_state) {
-              .idle => 0.5,
-              .downloading => 0.5,
-              .done => 0.0,
-            }
-          : switch (_state) {
-              .idle => 0.0,
-              .downloading => 0.5,
-              .done => 1.0,
-            },
-      builder: (context, t, child) {
-        return ClipPath(
-          clipper: ShapeBorderClipper(
-            shape: _shapeAt(t),
-          ),
-          child: child,
-        );
-      },
-      child: AnimatedBuilder(
-        animation: _animationController,
-        builder: (context, _) {
-          final double f = _animationController.value;
+    return DownloadBuilder(
+      episode: episode,
+      builder: (context, state, progress) {
+        final done = state == .completed;
+        final IconData icon = done
+            ? Icons.check_rounded
+            : Icons.download_for_offline_outlined;
 
-          return Stack(
+        return SingleMotionBuilder(
+          // Low overshoot so the mid-stop (bun) doesn't bounce past into sunny.
+          motion: const MaterialSpringMotion.standardSpatialFast(),
+          value: switch (state) {
+            .completed => 1.0,
+            .running || .paused || .enqueued => 0.5,
+            _ => 0.0,
+          },
+          builder: (context, t, child) {
+            return ClipPath(
+              clipper: ShapeBorderClipper(
+                shape: _shapeAt(t),
+              ),
+              child: child,
+            );
+          },
+          child: Stack(
             children: [
               Positioned.fill(
                 child: ColoredBox(
@@ -128,8 +92,13 @@ class _DownloadButtonState extends State<DownloadButton>
                 ),
               ),
               Positioned.fill(
-                child: ClipRect(
-                  clipper: _BottomFillClipper(f),
+                child: SingleMotionBuilder(
+                  value: progress ?? 0.0,
+                  motion: MaterialSpringMotion.standardSpatialFast(),
+                  builder: (context, value, child) => ClipRect(
+                    clipper: _BottomFillClipper(value.clamp(0.0, 1.0)),
+                    child: child,
+                  ),
                   child: Stack(
                     children: [
                       Positioned.fill(
@@ -154,23 +123,14 @@ class _DownloadButtonState extends State<DownloadButton>
                 child: Material(
                   color: Colors.transparent,
                   child: InkWell(
-                    onTap: _onTap,
-                    onTapDown: (_) {
-                      _setDown(true);
-                    },
-                    onTapUp: (_) {
-                      _setDown(false);
-                    },
-                    onTapCancel: () {
-                      _setDown(false);
-                    },
+                    onTap: () => _onTap(context, state),
                   ),
                 ),
               ),
             ],
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 

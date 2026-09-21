@@ -9,17 +9,17 @@ final List<Download> mockDownloads = [
     episode: _episode('Roger Penrose: Physics of the Mind'),
     megabytes: 312,
     received: 187,
-    state: .downloading,
+    state: .running,
   ),
   Download(
     episode: _episode('Ownership and Extreme Accountability'),
     megabytes: 254,
-    state: .queued,
+    state: .enqueued,
   ),
   Download(
     episode: _episode('The Truth About the Culture War'),
     megabytes: 178,
-    state: .queued,
+    state: .enqueued,
   ),
   Download(
     episode: _episode('What Is Meditation, Really?'),

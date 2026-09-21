@@ -5,7 +5,7 @@ import 'package:hydrated_bloc/hydrated_bloc.dart';
 import 'package:rxdart/rxdart.dart';
 
 abstract class ViewCubit<T> extends HydratedCubit<ViewState<T>> {
-  ViewCubit() : super(const ViewIdle());
+  ViewCubit() : super(ViewIdle<T>());
 
   Object? toJsonT(T data);
   T fromJsonT(Object? json);

@@ -77,7 +77,7 @@ class AudioHandlerService extends BaseAudioHandler with SeekHandler {
 
   /// Loads [episode] for playback. Loading the already-loaded episode is a
   /// no-op, so reopening the player never restarts the stream.
-  Future<void> load(Episode episode) async {
+  Future<void> load(Episode episode, String? localFilePath) async {
     if (mediaItem.valueOrNull?.id == episode.guid &&
         _player.audioSource != null) {
       return;
@@ -92,9 +92,11 @@ class AudioHandlerService extends BaseAudioHandler with SeekHandler {
       ),
     );
 
-    await _player.setAudioSource(
-      AudioSource.uri(Uri.parse(episode.audioUrl)),
-    );
+    final audioSource = localFilePath != null
+        ? AudioSource.file(localFilePath)
+        : AudioSource.uri(Uri.parse(episode.audioUrl));
+
+    await _player.setAudioSource(audioSource);
   }
 
   static Future<AudioHandlerService> initAudioService(

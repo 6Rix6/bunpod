@@ -12,15 +12,22 @@ import 'package:motor/motor.dart';
 class DownloadTile extends StatelessWidget {
   const DownloadTile({
     super.key,
+    required this.episode,
     required this.download,
+    this.played = false,
     this.onTap,
     this.onDelete,
     this.removing = false,
     this.onRemoved,
     this.borderRadius,
+    this.onRetry,
+    this.onCancel,
   });
 
-  final Download download;
+  final Episode episode;
+  final DownloadProgressInfo download;
+  final bool played;
+
   final VoidCallback? onTap;
 
   /// Shown as a trailing delete button on rows that are fully downloaded.
@@ -32,13 +39,15 @@ class DownloadTile extends StatelessWidget {
   final bool removing;
   final VoidCallback? onRemoved;
 
+  final VoidCallback? onRetry;
+  final VoidCallback? onCancel;
+
   final BorderRadius? borderRadius;
 
   @override
   Widget build(BuildContext context) {
     final ColorScheme cs = Theme.of(context).colorScheme;
     final TextTheme tt = Theme.of(context).textTheme;
-    final Episode episode = download.episode;
 
     return RemovalCollapse(
       removing: removing,
@@ -95,15 +104,19 @@ class DownloadTile extends StatelessWidget {
                         overflow: .ellipsis,
                         style: tt.bodyLarge,
                       ),
-                      4.gap,
-                      Text(
-                        sizeLabel(download.megabytes),
-                        style: GoogleFonts.googleSansCode(
-                          textStyle: tt.labelSmall,
-                          color: cs.onSurfaceVariant,
-                          fontFeatures: const [FontFeature.tabularFigures()],
+                      if (download.hasExpectedFileSize) ...[
+                        4.gap,
+                        Text(
+                          sizeLabel(
+                            download.expectedFileSize ~/ (1024 * 1024), // MB,
+                          ),
+                          style: GoogleFonts.googleSansCode(
+                            textStyle: tt.labelSmall,
+                            color: cs.onSurfaceVariant,
+                            fontFeatures: const [FontFeature.tabularFigures()],
+                          ),
                         ),
-                      ),
+                      ],
                     ],
                   ),
                 ),
@@ -119,11 +132,10 @@ class DownloadTile extends StatelessWidget {
 
   Widget? _trailing(BuildContext context, ColorScheme cs) {
     switch (download.state) {
-      case .downloading:
+      case .running:
+      case .paused:
         return InkResponse(
-          onTap: () {
-            ComingSoon.show(context);
-          },
+          onTap: onCancel,
           radius: 26,
           child: SizedBox(
             width: 44,
@@ -131,8 +143,14 @@ class DownloadTile extends StatelessWidget {
             child: Stack(
               alignment: .center,
               children: [
-                CircularWavyProgressIndicator(
-                  value: download.progress.clamp(0.0, 1.0),
+                SingleMotionBuilder(
+                  value: download.progress,
+                  motion: MaterialSpringMotion.standardSpatialFast(),
+                  builder: (context, value, child) {
+                    return CircularWavyProgressIndicator(
+                      value: value.clamp(0.0, 1.0),
+                    );
+                  },
                 ),
                 Icon(
                   Icons.stop_rounded,
@@ -143,7 +161,8 @@ class DownloadTile extends StatelessWidget {
             ),
           ),
         );
-      case .queued:
+      case .enqueued:
+      case .waitingToRetry:
         return SizedBox(
           width: 44,
           height: 44,
@@ -159,28 +178,21 @@ class DownloadTile extends StatelessWidget {
             ],
           ),
         );
-      case .done:
+      case .completed:
         final Widget? deleteButton = onDelete == null
             ? null
             : _DeleteButton(onPressed: onDelete!);
 
-        if (!download.played) return deleteButton;
+        if (!played) return deleteButton;
 
         return Row(
           mainAxisSize: .min,
           children: [
-            Container(
-              width: 28,
-              height: 28,
-              decoration: ShapeDecoration(
-                color: cs.tertiaryContainer,
-                shape: MaterialShapeBorder(shape: MaterialShapes.cookie7Sided),
-              ),
-              child: Icon(
-                Icons.check_rounded,
-                size: 16,
-                color: cs.onTertiaryContainer,
-              ),
+            _InfoIcon(
+              icon: Icons.check_rounded,
+              backgroundColor: cs.tertiaryContainer,
+              iconColor: cs.onTertiaryContainer,
+              label: 'Played',
             ),
             if (deleteButton != null) ...[
               4.gap,
@@ -188,6 +200,44 @@ class DownloadTile extends StatelessWidget {
             ],
           ],
         );
+      case .failed:
+      case .canceled:
+      case .notFound:
+        if (onRetry == null && onCancel == null) {
+          return SizedBox.shrink();
+        }
+        return ExpressiveMenu.standard(
+          width: 160,
+          items: [
+            if (onRetry != null)
+              ExpressiveMenuItem(
+                label: 'Retry',
+                icon: Icons.refresh_rounded,
+                onPressed: onRetry,
+              ),
+            if (onCancel != null)
+              ExpressiveMenuItem(
+                label: 'Cancel',
+                icon: Icons.close_rounded,
+                onPressed: onCancel,
+              ),
+          ],
+          builder: (context, c) {
+            return IconButton(
+              onPressed: () => c.isOpen ? c.close() : c.open(),
+              icon: _InfoIcon(
+                icon: Icons.error_outline_rounded,
+                backgroundColor: cs.errorContainer,
+                iconColor: cs.onErrorContainer,
+                label: download.state.name,
+                containerSize: 36,
+                iconSize: 20,
+              ),
+            );
+          },
+        );
+      case .idle:
+        return SizedBox.shrink();
     }
   }
 }
@@ -287,5 +337,51 @@ class _DeleteButtonState extends State<_DeleteButton> {
         ),
       ),
     );
+  }
+}
+
+class _InfoIcon extends StatelessWidget {
+  const _InfoIcon({
+    required this.icon,
+    required this.backgroundColor,
+    required this.iconColor,
+    this.label,
+    this.containerSize = 28,
+    this.iconSize,
+  });
+
+  final IconData icon;
+  final Color backgroundColor;
+  final Color iconColor;
+  final String? label;
+  final double containerSize;
+  final double? iconSize;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget child = Container(
+      width: containerSize,
+      height: containerSize,
+      decoration: ShapeDecoration(
+        color: backgroundColor,
+        shape: MaterialShapeBorder(
+          shape: MaterialShapes.cookie7Sided,
+        ),
+      ),
+      child: Icon(
+        icon,
+        size: iconSize ?? containerSize - 12,
+        color: iconColor,
+      ),
+    );
+
+    if (label != null) {
+      child = Tooltip(
+        message: label,
+        child: child,
+      );
+    }
+
+    return child;
   }
 }

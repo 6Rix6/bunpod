@@ -853,9 +853,9 @@ class $EpisodesTable extends Episodes
   late final GeneratedColumn<String> imageUrl = GeneratedColumn<String>(
     'image_url',
     aliasedName,
-    true,
+    false,
     type: DriftSqlType.string,
-    requiredDuringInsert: false,
+    requiredDuringInsert: true,
   );
   static const VerificationMeta _pubDateMeta = const VerificationMeta(
     'pubDate',
@@ -945,6 +945,8 @@ class $EpisodesTable extends Episodes
         _imageUrlMeta,
         imageUrl.isAcceptableOrUnknown(data['image_url']!, _imageUrlMeta),
       );
+    } else if (isInserting) {
+      context.missing(_imageUrlMeta);
     }
     if (data.containsKey('pub_date')) {
       context.handle(
@@ -1005,7 +1007,7 @@ class $EpisodesTable extends Episodes
       imageUrl: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}image_url'],
-      ),
+      )!,
       pubDate: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}pub_date'],
@@ -1032,7 +1034,7 @@ class EpisodeRow extends DataClass implements Insertable<EpisodeRow> {
   final int feedId;
   final String guid;
   final String title;
-  final String? imageUrl;
+  final String imageUrl;
   final DateTime pubDate;
   final String audioUrl;
   final int totalSeconds;
@@ -1041,7 +1043,7 @@ class EpisodeRow extends DataClass implements Insertable<EpisodeRow> {
     required this.feedId,
     required this.guid,
     required this.title,
-    this.imageUrl,
+    required this.imageUrl,
     required this.pubDate,
     required this.audioUrl,
     required this.totalSeconds,
@@ -1053,9 +1055,7 @@ class EpisodeRow extends DataClass implements Insertable<EpisodeRow> {
     map['feed_id'] = Variable<int>(feedId);
     map['guid'] = Variable<String>(guid);
     map['title'] = Variable<String>(title);
-    if (!nullToAbsent || imageUrl != null) {
-      map['image_url'] = Variable<String>(imageUrl);
-    }
+    map['image_url'] = Variable<String>(imageUrl);
     map['pub_date'] = Variable<DateTime>(pubDate);
     map['audio_url'] = Variable<String>(audioUrl);
     map['total_seconds'] = Variable<int>(totalSeconds);
@@ -1068,9 +1068,7 @@ class EpisodeRow extends DataClass implements Insertable<EpisodeRow> {
       feedId: Value(feedId),
       guid: Value(guid),
       title: Value(title),
-      imageUrl: imageUrl == null && nullToAbsent
-          ? const Value.absent()
-          : Value(imageUrl),
+      imageUrl: Value(imageUrl),
       pubDate: Value(pubDate),
       audioUrl: Value(audioUrl),
       totalSeconds: Value(totalSeconds),
@@ -1087,7 +1085,7 @@ class EpisodeRow extends DataClass implements Insertable<EpisodeRow> {
       feedId: serializer.fromJson<int>(json['feedId']),
       guid: serializer.fromJson<String>(json['guid']),
       title: serializer.fromJson<String>(json['title']),
-      imageUrl: serializer.fromJson<String?>(json['imageUrl']),
+      imageUrl: serializer.fromJson<String>(json['imageUrl']),
       pubDate: serializer.fromJson<DateTime>(json['pubDate']),
       audioUrl: serializer.fromJson<String>(json['audioUrl']),
       totalSeconds: serializer.fromJson<int>(json['totalSeconds']),
@@ -1101,7 +1099,7 @@ class EpisodeRow extends DataClass implements Insertable<EpisodeRow> {
       'feedId': serializer.toJson<int>(feedId),
       'guid': serializer.toJson<String>(guid),
       'title': serializer.toJson<String>(title),
-      'imageUrl': serializer.toJson<String?>(imageUrl),
+      'imageUrl': serializer.toJson<String>(imageUrl),
       'pubDate': serializer.toJson<DateTime>(pubDate),
       'audioUrl': serializer.toJson<String>(audioUrl),
       'totalSeconds': serializer.toJson<int>(totalSeconds),
@@ -1113,7 +1111,7 @@ class EpisodeRow extends DataClass implements Insertable<EpisodeRow> {
     int? feedId,
     String? guid,
     String? title,
-    Value<String?> imageUrl = const Value.absent(),
+    String? imageUrl,
     DateTime? pubDate,
     String? audioUrl,
     int? totalSeconds,
@@ -1122,7 +1120,7 @@ class EpisodeRow extends DataClass implements Insertable<EpisodeRow> {
     feedId: feedId ?? this.feedId,
     guid: guid ?? this.guid,
     title: title ?? this.title,
-    imageUrl: imageUrl.present ? imageUrl.value : this.imageUrl,
+    imageUrl: imageUrl ?? this.imageUrl,
     pubDate: pubDate ?? this.pubDate,
     audioUrl: audioUrl ?? this.audioUrl,
     totalSeconds: totalSeconds ?? this.totalSeconds,
@@ -1187,7 +1185,7 @@ class EpisodesCompanion extends UpdateCompanion<EpisodeRow> {
   final Value<int> feedId;
   final Value<String> guid;
   final Value<String> title;
-  final Value<String?> imageUrl;
+  final Value<String> imageUrl;
   final Value<DateTime> pubDate;
   final Value<String> audioUrl;
   final Value<int> totalSeconds;
@@ -1206,13 +1204,14 @@ class EpisodesCompanion extends UpdateCompanion<EpisodeRow> {
     required int feedId,
     required String guid,
     required String title,
-    this.imageUrl = const Value.absent(),
+    required String imageUrl,
     required DateTime pubDate,
     required String audioUrl,
     required int totalSeconds,
   }) : feedId = Value(feedId),
        guid = Value(guid),
        title = Value(title),
+       imageUrl = Value(imageUrl),
        pubDate = Value(pubDate),
        audioUrl = Value(audioUrl),
        totalSeconds = Value(totalSeconds);
@@ -1243,7 +1242,7 @@ class EpisodesCompanion extends UpdateCompanion<EpisodeRow> {
     Value<int>? feedId,
     Value<String>? guid,
     Value<String>? title,
-    Value<String?>? imageUrl,
+    Value<String>? imageUrl,
     Value<DateTime>? pubDate,
     Value<String>? audioUrl,
     Value<int>? totalSeconds,
@@ -2366,6 +2365,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   );
   late final PlaybackDao playbackDao = PlaybackDao(this as AppDatabase);
   late final CategoryDao categoryDao = CategoryDao(this as AppDatabase);
+  late final EpisodeDao episodeDao = EpisodeDao(this as AppDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -3323,7 +3323,7 @@ typedef $$EpisodesTableCreateCompanionBuilder =
       required int feedId,
       required String guid,
       required String title,
-      Value<String?> imageUrl,
+      required String imageUrl,
       required DateTime pubDate,
       required String audioUrl,
       required int totalSeconds,
@@ -3334,7 +3334,7 @@ typedef $$EpisodesTableUpdateCompanionBuilder =
       Value<int> feedId,
       Value<String> guid,
       Value<String> title,
-      Value<String?> imageUrl,
+      Value<String> imageUrl,
       Value<DateTime> pubDate,
       Value<String> audioUrl,
       Value<int> totalSeconds,
@@ -3656,7 +3656,7 @@ class $$EpisodesTableTableManager
                 Value<int> feedId = const Value.absent(),
                 Value<String> guid = const Value.absent(),
                 Value<String> title = const Value.absent(),
-                Value<String?> imageUrl = const Value.absent(),
+                Value<String> imageUrl = const Value.absent(),
                 Value<DateTime> pubDate = const Value.absent(),
                 Value<String> audioUrl = const Value.absent(),
                 Value<int> totalSeconds = const Value.absent(),
@@ -3676,7 +3676,7 @@ class $$EpisodesTableTableManager
                 required int feedId,
                 required String guid,
                 required String title,
-                Value<String?> imageUrl = const Value.absent(),
+                required String imageUrl,
                 required DateTime pubDate,
                 required String audioUrl,
                 required int totalSeconds,

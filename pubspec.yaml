@@ -53,6 +53,9 @@ dependencies:
   drift_flutter: ^0.3.1
   path_provider: ^2.1.6
   dio: ^5.11.0
+  rxdart: ^0.28.0
+  background_downloader: 9.5.9
+  xxh3: ^1.2.0
 
 dependency_overrides:
   flutter_secure_storage: ^10.0.0
