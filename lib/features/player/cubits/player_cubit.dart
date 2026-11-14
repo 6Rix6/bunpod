@@ -39,6 +39,7 @@ extension PlayerStateX on PlayerState {
 }
 
 /// Single shared player state, backed by the OS-integrated audio handler.
+// TODO: use ViewState
 class PlayerCubit extends HydratedCubit<PlayerState> {
   PlayerCubit(this._handler, this._playbackRepository, this._downloadRepository)
     : super(const PlayerState()) {

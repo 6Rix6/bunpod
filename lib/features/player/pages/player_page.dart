@@ -51,7 +51,6 @@ class _PlayerPageState extends State<PlayerPage> {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<PlayerCubit, PlayerState>(
-      bloc: locator<PlayerCubit>(),
       builder: (context, state) {
         final Episode episode = widget.episode;
         final ColorScheme cs = episode.scheme(context);

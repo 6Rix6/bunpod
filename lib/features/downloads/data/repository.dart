@@ -71,6 +71,7 @@ class DownloadRepositoryImpl implements DownloadRepository {
       url,
       filename: fileName,
       directory: downloadDirectory,
+      displayName: episode.title,
       metaDada: episode.localId.toString(),
     );
   }

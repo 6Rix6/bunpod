@@ -323,7 +323,7 @@ class _HomePageLoadedState extends State<HomePageLoaded>
                   return Padding(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                     child: BlocSelector<PlayerCubit, PlayerState, bool>(
-                      selector: (state) => state.episode == ep,
+                      selector: (state) => state.episode?.localId == ep.localId,
                       builder: (context, playing) => EpisodeCard(
                         episode: ep,
                         playing: playing,

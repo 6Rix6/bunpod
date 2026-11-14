@@ -63,11 +63,11 @@ class DownloadManager {
 
     _updatesSubscription = _fileDownloader.updates.listen(_handleUpdate);
 
-    _fileDownloader.configureNotificationForGroup(
-      FileDownloader.defaultGroup,
-      running: const TaskNotification('Downloading {filename}', '{progress}'),
-      progressBar: true,
+    _fileDownloader.configure(
+      androidConfig: (Config.runInForeground, Config.always),
     );
+
+    await configureNotification();
 
     final List<TaskRecord> records = [];
 
@@ -110,6 +110,26 @@ class DownloadManager {
     await _fileDownloader.start(doTrackTasks: true, autoCleanDatabase: false);
   }
 
+  /// Configures the notification for download progress if the permission granted.
+  Future<void> configureNotification() async {
+    final PermissionStatus notificationStatus = await _fileDownloader
+        .permissions
+        .status(
+          .notifications,
+        );
+
+    if (notificationStatus == .granted) {
+      _fileDownloader.configureNotificationForGroup(
+        FileDownloader.defaultGroup,
+        running: const TaskNotification(
+          'Downloading {displayName}',
+          '{progress}',
+        ),
+        progressBar: true,
+      );
+    }
+  }
+
   /// Progress Stream for the given URL. Subscribed to by
   /// DownloadProgressCubit.
   /// If you always want the latest state at creation time to be emitted
@@ -137,6 +157,7 @@ class DownloadManager {
     bool requiresWiFi = false,
     bool allowPause = true,
     String metaDada = '',
+    String displayName = '',
   }) async {
     if (_activeTasks.contains(url)) {
       return; // Already in progress
@@ -152,6 +173,7 @@ class DownloadManager {
       allowPause: allowPause,
       updates: Updates.statusAndProgress,
       metaData: metaDada,
+      displayName: displayName,
       priority: 0,
     );
 
